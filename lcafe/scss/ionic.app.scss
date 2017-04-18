@@ -1,0 +1,627 @@
+/*
+To customize the look and feel of Ionic, you can override the variables
+in ionic's _variables.scss file.
+
+For example, you might change some of the default colors:
+*/
+$light: #fff !default;
+$stable: #f8f8f8 !default;
+$positive: #387ef5 !default;
+$calm: #11c1f3 !default;
+$balanced: #33cd5f !default;
+$energized: #ffc900 !default;
+$assertive: #ef473a !default;
+$royal: #DAA520 !default;
+$dark: #444 !default;
+$font-family-base: '-apple-system', "Tohama", "Roboto", "Segoe UI", sans-serif !default; // The path for our ionicons font files, relative to the built CSS in www/css
+$ionicons-font-path: "../lib/ionic/fonts" !default; // Include all of Ionic
+@import "www/lib/ionic/scss/ionic";
+@import "www/lib/ionic-content-banner/scss/ionic.content.banner";
+@import "www/lib/ion-datetime-picker/src/picker"; // common style
+
+// common class ============================================================
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.pull-left {
+  float: left;
+}
+
+.pull-right {
+  float: right;
+}
+
+.rlt {
+  position: relative;
+}
+
+.cf {
+  clear: both;
+}
+
+.no-border {
+  border: none;
+}
+
+.no-padding {
+  padding: 0;
+}
+
+.no-margin {
+  margin: 0;
+}
+
+.circle {
+  border-radius: 50%;
+}
+
+.padding-20 {
+  padding: 20px;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+
+  .col-33 {
+    padding: 5px;
+  }
+}
+
+.rlt {
+  position: relative;
+}
+
+.text-2x {
+  font-size: 2em;
+}
+
+.text-sm {
+  font-size: 0.7em;
+}
+
+.profile-picture {
+  border-radius: 50%;
+}
+// Login ============================================================
+
+.logo {
+  margin: 1em auto 2em;
+  width: 15em;
+
+  img{
+    height:100%;
+    width:50%;
+    display:block;
+    margin:auto;
+  }
+}
+
+.login-bg {
+  background-color: $stable;
+
+  .scroll {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .login-content {
+      min-width: 80%;
+
+      .list {
+        margin-bottom: 5px;
+      }
+
+      .item-stacked-label {
+        padding: 0;
+        border: none;
+
+        &+ .item-stacked-label {
+          margin-top: 10px;
+        }
+
+        .input-label {
+          color: $dark;
+        }
+
+        input {
+          padding: 0;
+          color: $dark;
+          background: none;
+          border-bottom: 1px solid $dark;
+        }
+      }
+    }
+  }
+}
+// Side Menu Bar ============================================================
+
+.list {
+  img{
+    height:100%;
+    width:50%;
+    display:block;
+    margin:auto;
+  }
+
+  .smFont0 {
+    font-size: 1.8em;
+    color: grey;
+    margin-left: 0.5em;
+  }
+
+  .smFont1 {
+    font-size: 1.0em;
+    margin-left: 2.0em;
+  }
+}
+// Menu ============================================================
+
+.item-menu {
+  padding: 0;
+  margin: 0;
+  border: 0;
+
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .overlay {
+    bottom: 0;
+    padding: 0.7em;
+    position: absolute;
+    width: 100%;
+    font-size: 1em;
+    background: rgba(0, 0, 0, 0.7);
+  }
+}
+
+.ribbon {
+  position: absolute;
+  left: -5px; top: -5px;
+  z-index: 1;
+  overflow: hidden;
+  width: 100%; height: 100%;
+  text-align: right;
+}
+
+.ribbon span {
+  font-size: 15px;
+  font-weight: bold;
+  color: #FFF;
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 25px;
+  transform: rotate(-45deg);
+  -webkit-transform: rotate(-45deg);
+  width: 150px;
+  display: block;
+  background: #79A70A;
+  background: linear-gradient(#F70505 0%, #8F0808 100%);
+  box-shadow: 0 3px 10px -5px rgba(0, 0, 0, 1);
+  position: absolute;
+  top: 22px; left: -38px;
+}
+
+.ribbon span::before {
+  content: "";
+  position: absolute; left: 0px; top: 100%;
+  z-index: -1;
+  border-left: 3px solid #8F0808;
+  border-right: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+  border-top: 3px solid #8F0808;
+}
+
+.ribbon span::after {
+  content: "";
+  position: absolute; right: 0px; top: 100%;
+  z-index: -1;
+  border-left: 3px solid transparent;
+  border-right: 3px solid #8F0808;
+  border-bottom: 3px solid transparent;
+  border-top: 3px solid #8F0808;
+}
+// Pin ============================================================
+
+.row {
+  .col {
+    img{
+      width:50%;height:100%;
+    }
+
+    .middlePin {
+      text-align: center;
+      margin: auto;
+      width: 100%;
+      border: 3px solid $royal;
+      padding: 10px;
+    }
+
+    .middleText {
+      text-align: center;
+      margin: auto;
+      width: 100%;
+    }
+
+    .pFont0 {
+      font-size: 2.0em;
+      color: grey;
+      font-family: 'Arvo', serif;
+    }
+
+    .pFont1 {
+      font-size: 1.0em;
+      font-weight: 500;
+      color: grey;
+    }
+
+    .pFont2 {
+      font-weight: 700;
+    }
+  }
+}
+// Item ============================================================
+
+.taFont0 {
+  width:100%;
+}
+
+.taFont0[disabled] {
+  background: $light;
+}
+
+.item-cover {
+  position: relative;
+
+  img {
+    display: block;
+  }
+
+  .overlay {
+    bottom: 0;
+    padding: 0.7em;
+    position: absolute;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.75);
+
+    .price {
+      font-size: 1.5em;
+    }
+  }
+
+  .fav {
+    top: 0;
+    padding: 0.2em;
+    position: absolute;
+    color: $assertive;
+    right: 0;
+    font-size: 3.0em;
+  }
+}
+
+.list {
+  .item {
+    .quantityRow {
+      .button-card {
+        vertical-align: bottom;
+        min-height: 10px;
+        min-width: 20px;
+        line-height: 36px;
+        font-size: 1.5em;
+
+        &.button-qty {
+          font-size: 1.25em;
+        }
+      }
+    }
+  }
+}
+
+.item-button-group {
+  padding: 0;
+
+  .button {
+    margin: 0;
+    border-radius: 0;
+
+    i,span {
+      vertical-align: middle;
+    }
+  }
+}
+
+#center-div {
+  text-align: center;
+}
+// Cart ============================================================
+
+.button-card + .button-card {
+  margin-right: 0.3em;
+}
+
+#cart-card {
+  margin: 0;
+  border: none;
+}
+
+#cart-bottom-card {
+  margin: 0;
+  border-top: rgba(0, 0, 0, 0.3) solid 2px;
+  border-bottom: rgba(0, 0, 0, 0.3) solid 2px;
+}
+#comboMsg{
+  font-size:0.75em;
+  font-weight:700;
+}
+.item {
+  &.card {
+    .item-content {
+      padding-right: 0.5em;
+    }
+
+    .price {
+      vertical-align: bottom;
+      line-height: 1.5em;
+    }
+
+    .button-card {
+      vertical-align: bottom;
+      min-height: 10px;
+      min-width: 20px;
+      line-height: 36px;
+      font-size: 1.2em;
+
+      &.button-qty {
+        font-size: 1em;
+      }
+    }
+  }
+}
+// Dine In ============================================================
+
+.dineIn-page {
+  .card {
+    margin-top: 0.4em;
+  }
+}
+.dineIn-btn-grp{
+  position:absolute;
+  bottom:0;
+  width:100%;
+}
+// Pre-Order ============================================================
+
+.preOrder-page {
+  .list {
+    img{
+      width:50%;
+      margin-left:auto;
+      margin-right:auto;
+      display: block;
+    }
+  }
+}
+// Promotion ============================================================
+
+.promotion-page {
+    img{
+      height:100%;
+      width:100%;
+    }
+}
+// Cart ============================================================
+
+#map {
+  width: 100%;
+  height: 30em;
+}
+// My Account ============================================================
+
+.list {
+  .item {
+    .adFont0 {
+      color: grey;
+    }
+
+    .adFont1 {
+      color: grey;
+    }
+  }
+}
+// About us ============================================================
+
+.padding {
+  .abFont0 {
+    font-size: 1.3em;
+
+    .openColor {
+      color: green;
+    }
+
+    .closeColor {
+      color: red;
+    }
+  }
+
+  .list {
+    .item-stacked-label {
+      .data {
+        display: block;
+        height: 2.0em;
+        padding-top: 0.2em;
+        font-size: 0.8em;
+        margin-top: 0.3em;
+        color: darkgrey;
+      }
+    }
+  }
+}
+// Feedback ============================================================
+
+ul.rating li {
+  display: inline;
+  border: 0;
+  background: none;
+  padding: 5px 10px;
+}
+
+ul.rating li i {
+  font-size: 2.0em;
+}
+// Filter & Sorting ============================================================
+
+.fsView{
+  bottom: 0;
+  min-height: initial;
+  top: initial;
+  height: 40%;
+}
+
+// Order Details ============================================================
+
+.list {
+  .topPortion {
+    .topHead {
+      margin-bottom: 10px;
+
+      .head-left {
+        font-size: 0.90em;
+        font-weight: 900;
+      }
+
+      .head-right {
+        font-size: 0.90em;
+        font-weight: 900;
+      }
+    }
+
+    .topFoot {
+      .foot-left {
+        color: grey;
+        font-size: 0.75em;
+        font-weight: 700;
+      }
+
+      .foot-right {
+        color: grey;
+        font-size: 0.75em;
+        font-weight: 500;
+      }
+    }
+  }
+
+  .centerPortion {
+    font-size: 1.0em;
+  }
+
+  .bottomPortion {
+    font-size: 0.90em;
+    border: none;
+
+    .iFont0 {
+      color: darkgrey;
+    }
+
+    .iFont1 {
+      color: darkgrey;
+    }
+
+    .iFont2 {
+      color: grey;
+
+      .iFont2-0 {
+        font-weight: 700;
+      }
+    }
+  }
+}
+// Payment ============================================================
+
+.payment-page{
+  img{
+    display: block;
+    width: 80%;
+    height: auto;
+    margin-left: auto;
+    margin-right: auto;
+    padding-top:20px;
+  }
+}
+// Favourite ============================================================
+
+.row {
+  .col {
+    .fFont0 {
+      color: $royal;
+      font-size: 0.9em;
+    }
+
+    .fFont1 {
+      font-size: 2.5em;
+      color: red;
+    }
+
+    .fFont2 {
+      font-size: 0.9em;
+      font-weight: light;
+    }
+  }
+  .favIcon{
+    height:5em;
+    img {
+      width: 100%;
+      height: 100%;
+    }
+  }
+}
+// Top 10 ============================================================
+
+.item {
+  .tTop {
+    .tFont0 {
+      background-color: red;
+      color: white;
+      width: 1.5em;
+      height: 2.0em;
+      padding-top: 0.2em;
+      position: absolute;
+      top: -10px;
+      left: 5px;
+      text-align: center;
+      font-size: 0.8em;
+    }
+
+    .tFont1 {
+      font-size: 0.9em;
+      font-weight: light;
+    }
+  }
+
+  .tBottom {
+    .tFont2 {
+      font-size: 0.9em;
+    }
+  }
+}
+// History ============================================================
+
+.list {
+  .item {
+    .hFont0 {
+      font-size: 0.9em;
+    }
+
+    .hFont1 {
+      font-size: 0.7em;
+    }
+
+    .hFont2 {
+      font-size: 1.1em;
+      font-weight: bold;
+    }
+  }
+}
