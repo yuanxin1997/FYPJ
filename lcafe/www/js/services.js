@@ -189,7 +189,7 @@ app.factory('Account', function($http, Cart, APIurl) {
 
 app.factory('CafeInfo', function($http, APIurl) {
   return {
-    get: function(itemId) {
+    get: function() {
       var url = APIurl + 'WebserviceCafe.asmx/retrieveAllInfo?';
       return $http({
         method: 'GET',
@@ -202,8 +202,21 @@ app.factory('CafeInfo', function($http, APIurl) {
         return response.data;
       });
     },
-    getTermBreak: function(itemId) {
-      var url = APIurl + 'WebserviceCafe.asmx/retrieveAllTermBreaks?';
+    getHoliday: function() {
+      var url = APIurl + 'WebserviceCafe.asmx/retrieveHolidays?';
+      return $http({
+        method: 'GET',
+        url: url + "token=" + localStorage.getItem("accessToken"),
+        dataType: "json",
+        contentType: "application/json; charset=utf-8"
+      }).then(function successCallback(response) {
+        return response.data;
+      }, function errorCallback(response) {
+        return response.data;
+      });
+    },
+    getContact: function() {
+      var url = APIurl + 'WebserviceCafe.asmx/retrieveAllContact?';
       return $http({
         method: 'GET',
         url: url + "token=" + localStorage.getItem("accessToken"),
@@ -255,8 +268,8 @@ app.factory('Cart', function($http, moment, APIurl, $q) {
     cart.comboMessage = [];
   }
 
-  function checkPromoStatus() {
-    var url = APIurl + "WebserviceCafe.asmx/retrievePromoActivation";
+  function checkComboStatus() {
+    var url = APIurl + "WebserviceCafe.asmx/retrieveCombo";
     return $http({
       method: 'GET',
       url: url,
@@ -571,32 +584,33 @@ app.factory('Cart', function($http, moment, APIurl, $q) {
     var deferred = $q.defer();
     var discount = 0.0;
     var comboMessage = [];
-    checkPromoStatus().then(function(res) {
-      if (res[0].status & !res[1].status & !res[2].status) {
+    checkComboStatus().then(function(res) {
+      console.log(res);
+      if (res[0] & !res[1] & !res[2]) {
         discount = combo1n2n3(true, false, false);
         comboMessage = displayDiscount(true, false, false);
         console.log("only combo 1 is active ");
-      } else if (!res[0].status & res[1].status & !res[2].status) {
+      } else if (!res[0] & res[1] & !res[2]) {
         discount = combo1n2n3(false, true, false);
         comboMessage = displayDiscount(false, true, false);
         console.log("only combo 2 is active");
-      } else if (!res[0].status & !res[1].status & res[2].status) {
+      } else if (!res[0] & !res[1] & res[2]) {
         discount = combo1n2n3(false, false, true);
         comboMessage = displayDiscount(false, false, true);
         console.log("only combo 3 is active");
-      } else if (res[0].status & res[1].status & !res[2].status) {
+      } else if (res[0] & res[1] & !res[2]) {
         discount = combo1n2n3(true, true, false);
         comboMessage = displayDiscount(true, true, false);
         console.log("combo 1,2 are active");
-      } else if (!res[0].status & res[1].status & res[2].status) {
+      } else if (!res[0] & res[1] & res[2]) {
         discount = combo1n2n3(false, true, true);
         comboMessage = displayDiscount(false, true, true);
         console.log("combo 2,3 are active only");
-      } else if (res[0].status & !res[1].status & res[2].status) {
+      } else if (res[0] & !res[1] & res[2]) {
         discount = combo1n2n3(true, false, true);
         comboMessage = displayDiscount(true, false, true);
         console.log("combo 1,3 are active only");
-      } else if (res[0].status & res[1].status & res[2].status) {
+      } else if (res[0] & res[1] & res[2]) {
         discount = combo1n2n3(true, true, true);
         comboMessage = displayDiscount(true, true, true);
         console.log("all combo are active");
@@ -777,6 +791,18 @@ app.factory('Promotions', function($http, APIurl) {
         return response.data;
       });
     }
+    // emailTest: function() {
+    //   return $http({
+    //     method: 'GET',
+    //     url: "http://172.20.129.181/LCafeEmailServices/EmailServices.asmx/SendEmailVerification?email=yuanxintaxon@gmail.com&name=jane&confirmCode=dwafwafwa",
+    //     dataType: "json",
+    //     contentType: "application/json; charset=utf-8"
+    //   }).then(function successCallback(response) {
+    //     return response.data;
+    //   }, function errorCallback(response) {
+    //     return response.data;
+    //   });
+    // }
   };
 });
 

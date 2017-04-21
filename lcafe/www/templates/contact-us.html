@@ -7,15 +7,15 @@
 
       <h3 class="royal">Get in touch</h3>
       <div class="list card">
-        <a href="tel:64514384" class="item item-icon-left"> <i class="icon ion-ios-telephone"></i> Call us </a>
-        <a href="mailto:L-Rez@mymail.nyp.edu.sg" class="item item-icon-left"> <i class="icon ion-email"></i> Send us and Email</a>
+        <a ng-href="tel:{{contact.phone}}" class="item item-icon-left"> <i class="icon ion-ios-telephone"></i> Call us </a>
+        <a ng-href="mailto:{{contact.email}}" class="item item-icon-left"> <i class="icon ion-email"></i> Send us and Email</a>
       </div>
 
       <h3 class="royal">Get social with us</h3>
       <div class="list card">
-        <a class="item item-icon-left" ng-click="openLink('https://www.facebook.com')"> <i class="icon ion-social-facebook"></i> Visit us on Facebook </a>
-        <a class="item item-icon-left" ng-click="openLink('https://www.instagram.com')"> <i class="icon ion-social-instagram-outline"></i> Follow us on Instagram </a>
-        <a class="item item-icon-left" ng-click="openLink('https://www.twitter.com')"> <i class="icon ion-social-twitter"></i> Follow us on Twitter </a>
+        <a class="item item-icon-left" ng-click="openLink(contact.facebook)"> <i class="icon ion-social-facebook"></i> Visit us on Facebook </a>
+        <a class="item item-icon-left" ng-click="openLink(contact.instagram)"> <i class="icon ion-social-instagram-outline"></i> Follow us on Instagram </a>
+        <a class="item item-icon-left" ng-click="openLink(contact.twitter)"> <i class="icon ion-social-twitter"></i> Follow us on Twitter </a>
       </div>
 
     </div>

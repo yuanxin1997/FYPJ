@@ -1,0 +1,22 @@
+<ion-modal-view class="opModal" style="transform: translate(-50%, -50%);">
+
+  <ion-content class="light-bg">
+
+    <div class="list popupCafeInfo" >
+      <label class="item item-input item-stacked-label" ng-repeat="cafeInfo in cafeInfos">
+        <span class="input-label dark" style="">{{ cafeInfo.day }}</span>
+        <span class="data" >{{ cafeInfo.openinghours }} - {{ cafeInfo.closinghours }}</span>
+      </label>
+      <label class="item item-input item-stacked-label">
+      <span class="input-label dark">Weekends</span>
+      <span class="data">Closed</span>
+      </label>
+      <label class="item item-input item-stacked-label">
+      <span class="input-label dark">School/Public holidays</span>
+      <span class="data">Closed</span>
+      </label>
+    </div>
+
+  </ion-content>
+
+</ion-modal-view>

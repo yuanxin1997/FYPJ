@@ -1,7 +1,7 @@
 angular.module('starter.controllers', [])
   .constant('salt', 'bfawuiobwfb79237bf2628vf763vf32if732vfb937bvf89g7ase89vf2378vf812v783g92g793')
 
-  .controller('AuthCtrl', function($scope, $ionicHistory, Account, $rootScope, $state, $ionicPopup, md5, salt, Cart) {
+  .controller('authCtrl', function($scope, $ionicHistory, Account, $rootScope, $state, $ionicPopup, md5, salt, Cart) {
 
     $scope.Account = {};
     $scope.dataSend = {};
@@ -84,7 +84,7 @@ angular.module('starter.controllers', [])
 
   })
 
-  .controller('HomeCtrl', function($scope, $state, FoodMenu, Cart, $rootScope, $ionicSideMenuDelegate, $ionicModal, $rootScope, $filter, $cordovaNetwork, $ionicPlatform, $ionicPopup) {
+  .controller('homeCtrl', function($scope, $state, FoodMenu, Cart, $rootScope, $ionicSideMenuDelegate, $ionicModal, $rootScope, $filter, $cordovaNetwork, $ionicPlatform, $ionicPopup) {
 
     document.addEventListener("deviceready", function() {
 
@@ -204,7 +204,7 @@ angular.module('starter.controllers', [])
     $scope.$on('modal.hidden', function() {
       // Execute action
     });
-    // Execute action on remove modal
+
     $scope.$on('modal.removed', function() {
       // Execute action
     });
@@ -238,7 +238,7 @@ angular.module('starter.controllers', [])
     $scope.$on('modal.hidden', function() {
       // Execute action
     });
-    // Execute action on remove modal
+
     $scope.$on('modal.removed', function() {
       // Execute action
     });
@@ -255,7 +255,7 @@ angular.module('starter.controllers', [])
 
   })
 
-  .controller('DrinksCtrl', function($scope, $state, DrinkMenu, $rootScope, $ionicModal, $filter) {
+  .controller('drinksCtrl', function($scope, $state, DrinkMenu, $rootScope, $ionicModal, $filter) {
 
     $scope.sort = {
       value: 'itemSubCategory'
@@ -342,7 +342,7 @@ angular.module('starter.controllers', [])
     $scope.$on('modal.hidden', function() {
       // Execute action
     });
-    // Execute action on remove modal
+
     $scope.$on('modal.removed', function() {
       // Execute action
     });
@@ -376,7 +376,7 @@ angular.module('starter.controllers', [])
     $scope.$on('modal.hidden', function() {
       // Execute action
     });
-    // Execute action on remove modal
+
     $scope.$on('modal.removed', function() {
       // Execute action
     });
@@ -393,7 +393,7 @@ angular.module('starter.controllers', [])
 
   })
 
-  .controller('SpecialCtrl', function($scope, $state, SpecialMenu, $rootScope, $ionicModal, $timeout, $filter) {
+  .controller('specialCtrl', function($scope, $state, SpecialMenu, $rootScope, $ionicModal, $timeout, $filter) {
 
     $scope.sort = {
       value: 'itemSubCategory'
@@ -480,7 +480,7 @@ angular.module('starter.controllers', [])
     $scope.$on('modal.hidden', function() {
       // Execute action
     });
-    // Execute action on remove modal
+
     $scope.$on('modal.removed', function() {
       // Execute action
     });
@@ -514,7 +514,7 @@ angular.module('starter.controllers', [])
     $scope.$on('modal.hidden', function() {
       // Execute action
     });
-    // Execute action on remove modal
+
     $scope.$on('modal.removed', function() {
       // Execute action
     });
@@ -531,7 +531,7 @@ angular.module('starter.controllers', [])
 
   })
 
-  .controller('ItemCtrl', function($scope, $state, Items, Cart, $stateParams, $ionicPopup, $timeout, $ionicHistory, Favourite, $rootScope) {
+  .controller('itemCtrl', function($scope, $state, Items, Cart, $stateParams, $ionicPopup, $timeout, $ionicHistory, Favourite, $rootScope) {
 
     var id = $stateParams.id;
     var itemToCart;
@@ -673,7 +673,7 @@ angular.module('starter.controllers', [])
 
   })
 
-  .controller('FeedbackCtrl', function($scope, Feedback, $state, $ionicPopup) {
+  .controller('feedbackCtrl', function($scope, Feedback, $state, $ionicPopup) {
 
     $scope.fb = {
       subject: '',
@@ -715,7 +715,7 @@ angular.module('starter.controllers', [])
 
   })
 
-  .controller('CartCtrl', function($scope, $rootScope, $state, $ionicPopup, Cart, Promotions, $ionicContentBanner, $timeout) {
+  .controller('cartCtrl', function($scope, $rootScope, $state, $ionicPopup, Cart, Promotions, $ionicContentBanner, $timeout, $ionicSideMenuDelegate, $ionicModal, $ionicSlideBoxDelegate) {
 
     var contentBannerInstance;
     $scope.cart = Cart.get();
@@ -796,9 +796,59 @@ angular.module('starter.controllers', [])
       popupOrdTypePrompt();
     };
 
+
+
+    $ionicModal.fromTemplateUrl('templates/promoModal.html', {
+      scope: $scope,
+      animation: 'slide-in-up'
+    }).then(function(modal) {
+      $scope.modal = modal;
+    });
+
+    $scope.openModal = function(msg) {
+      Promotions.getAll().then(function(res) {
+        $scope.list = [];
+        for (var i = 0; i < res.length; i++) {
+          console.log(res[i]);
+          if (res[i].status == 1 && res[i].comboType == "combo1" && msg == "Combo 1") {
+            $scope.list.push(res[i]);
+          } else if (res[i].status == 1 && res[i].comboType == "combo2" && msg == "Combo 2") {
+            $scope.list.push(res[i]);
+          } else if (res[i].status == 1 && res[i].comboType == "combo3" && msg == "1 FOR 1") {
+            $scope.list.push(res[i]);
+          }
+        }
+        console.log($scope.list);
+      });
+      $ionicSlideBoxDelegate.slide(0);
+      $scope.modal.show();
+    };
+
+    $scope.closeModal = function() {
+      $scope.modal.hide();
+    };
+
+
+    $scope.$on('$destroy', function() {
+      $scope.modal.remove();
+    });
+
+    $scope.$on('modal.hide', function() {
+      // Execute action
+    });
+
+    $scope.$on('modal.removed', function() {
+      // Execute action
+    });
+    $scope.$on('modal.shown', function() {
+      console.log('Modal is shown!');
+    });
+
+    $ionicSideMenuDelegate.canDragContent(false);
+
   })
 
-  .controller('PromoCtrl', function($scope, $state, Promotions, $ionicSideMenuDelegate) {
+  .controller('promoCtrl', function($scope, $state, Promotions, $ionicSideMenuDelegate) {
 
     Promotions.getAll().then(function(res) {
       $scope.list = [];
@@ -807,8 +857,11 @@ angular.module('starter.controllers', [])
           $scope.list.push(res[i]);
         }
       }
+      console.log($scope.list);
     });
-
+    // Promotions.emailTest().then(function(res) {
+    //   console.log(res);
+    // });
     $scope.hasPromo = function(length) {
       if (length < 1) {
         return true;
@@ -1064,7 +1117,7 @@ angular.module('starter.controllers', [])
     $scope.$on('modal.hidden', function() {
       // Execute action
     });
-    // Execute action on remove modal
+
     $scope.$on('modal.removed', function() {
       // Execute action
     });
@@ -1092,7 +1145,7 @@ angular.module('starter.controllers', [])
 
   })
 
-  .controller('AddressCtrl', function($scope, $state) {
+  .controller('contactCtrl', function($scope, $state, CafeInfo) {
 
     function initialize() {
       // set up begining position
@@ -1114,6 +1167,24 @@ angular.module('starter.controllers', [])
       $scope.map = map;
     }
 
+    CafeInfo.getContact().then(function(res) {
+      $scope.contact = {};
+      for (var i = 0; i < res.length; i++) {
+        if (res[i].contactType == "Phone") {
+          $scope.contact.phone = res[i].contactSource;
+        } else if (res[i].contactType == "Email") {
+          $scope.contact.email = res[i].contactSource;
+        } else if (res[i].contactType == "Instagram") {
+          $scope.contact.instagram = res[i].contactSource;
+        } else if (res[i].contactType == "Facebook") {
+          $scope.contact.facebook = res[i].contactSource;
+        } else if (res[i].contactType == "Twitter") {
+          $scope.contact.twitter = res[i].contactSource;
+        }
+      }
+      console.log($scope.contact);
+    });
+
     $scope.init = function() {
       // load map when the ui is loaded
       initialize();
@@ -1125,14 +1196,14 @@ angular.module('starter.controllers', [])
 
   })
 
-  .controller('AboutCtrl', function($scope, $state, CafeInfo, moment) {
+  .controller('aboutCtrl', function($scope, $state, CafeInfo, moment) {
 
     CafeInfo.get().then(function(res) {
       var day;
       var id;
-      var isTermBreak = false;
+      var isHoliday = false;
       $scope.cafeInfos = res;
-
+      $scope.todayRemark = "No Remarks";
       // check today's day
       switch (moment().day()) {
         case 1:
@@ -1159,25 +1230,26 @@ angular.module('starter.controllers', [])
           id = -1;
       }
 
-      CafeInfo.getTermBreak().then(function(res) {
+      CafeInfo.getHoliday().then(function(res) {
         var a = moment();
         for (var i = 0; i < res.length; i++) {
           var from = new Date(res[i].DateFrom);
           var to = new Date(res[i].DateTo);
           to.setDate(to.getDate() + 1);
-          var withinTermBreak = moment(a).isBetween(from, to);
-          console.log("Is within term break: " + withinTermBreak);
-          if (withinTermBreak) {
-            isTermBreak = true;
+          var withinHoliday = moment(a).isBetween(from, to);
+          console.log("Is within Holiday: " + withinHoliday);
+          if (withinHoliday) {
+            isHoliday = true;
             break;
           } else {
-            isTermBreak = false;
+            isHoliday = false;
           }
         }
         console.log(res);
       }).then(function() {
-        if (isTermBreak) {
+        if (isHoliday) {
           $scope.status = 'Closed';
+          $scope.todayRemark = "It's Holiday Time!";
         } else {
           // get today's remarks
           if (id != -1) {
@@ -1222,14 +1294,14 @@ angular.module('starter.controllers', [])
 
   })
 
-  .controller('dineInCtrl', function($scope, $state, $cordovaBarcodeScanner, Cart, $ionicPopup, $rootScope, CafeInfo, moment, $q) {
+  .controller('dineInCtrl', function($scope, $state, $cordovaBarcodeScanner, Cart, $ionicModal, $ionicPopup, $rootScope, CafeInfo, moment, $q) {
 
     function cafeIsOpen() {
       var deferred = $q.defer();
       CafeInfo.get().then(function(res) {
         var day;
         var id;
-        var isTermBreak = false;
+        var isHoliday = false;
         $scope.cafeInfos = res;
         // check today's day
         switch (moment().day()) {
@@ -1257,24 +1329,24 @@ angular.module('starter.controllers', [])
             id = -1;
         }
 
-        CafeInfo.getTermBreak().then(function(res) {
+        CafeInfo.getHoliday().then(function(res) {
           var a = moment();
           for (var i = 0; i < res.length; i++) {
             var from = new Date(res[i].DateFrom);
             var to = new Date(res[i].DateTo);
             to.setDate(to.getDate() + 1);
-            var withinTermBreak = moment(a).isBetween(from, to);
-            console.log("Is within term break: " + withinTermBreak);
-            if (withinTermBreak) {
-              isTermBreak = true;
+            var withinHoliday = moment(a).isBetween(from, to);
+            console.log("Is within Holiday: " + withinHoliday);
+            if (withinHoliday) {
+              isHoliday = true;
               break;
             } else {
-              isTermBreak = false;
+              isHoliday = false;
             }
           }
           console.log(res);
         }).then(function() {
-          if (isTermBreak) {
+          if (isHoliday) {
             $scope.status = 'Closed';
           } else {
             // get today's remarks
@@ -1318,12 +1390,19 @@ angular.module('starter.controllers', [])
     }
 
     function popupCafeClose() {
-      $ionicPopup.alert({
-        title: 'Cafe is closed now',
-        subTitle: 'Please check out our opening hours.',
+      $ionicPopup.confirm({
+        title: 'Our cafe is closed now',
+        template: 'Do you want to check on our Opening hours?',
+        cancelText: 'No',
+        okText: 'Yes',
         okType: 'button-royal'
       }).then(function(res) {
-        console.log("Cafe closed");
+        if (res) {
+          $scope.openModal();
+          console.log('Yes');
+        } else {
+          console.log('No');
+        }
       });
     }
 
@@ -1342,6 +1421,37 @@ angular.module('starter.controllers', [])
         }
       });
     }
+
+    $ionicModal.fromTemplateUrl('templates/openingHours.html', {
+      scope: $scope,
+      animation: 'slide-in-up'
+    }).then(function(modal) {
+      $scope.modal = modal;
+    });
+
+    $scope.openModal = function() {
+      $scope.modal.show();
+    };
+
+    $scope.closeModal = function() {
+      $scope.modal.hide();
+    };
+
+    $scope.$on('$destroy', function() {
+      $scope.modal.remove();
+    });
+
+    $scope.$on('modal.hidden', function() {
+      // Execute action
+    });
+
+    $scope.$on('modal.removed', function() {
+      // Execute action
+    });
+
+    CafeInfo.get().then(function(res) {
+      $scope.cafeInfos = res;
+    });
 
     $scope.scan = function() {
       cafeIsOpen().then(function(res) {
@@ -1399,7 +1509,7 @@ angular.module('starter.controllers', [])
 
   })
 
-  .controller('preorderCtrl', function($scope, $state, $rootScope, Cart, $ionicPopup, CafeInfo, $q) {
+  .controller('preorderCtrl', function($scope, $state, $rootScope, Cart, $ionicModal, $ionicPopup, CafeInfo, $q) {
 
     var coeff = 1000 * 60 * 5;
     var date = new Date();
@@ -1414,7 +1524,7 @@ angular.module('starter.controllers', [])
       CafeInfo.get().then(function(res) {
         var day;
         var id;
-        var isTermBreak = false;
+        var isHoliday = false;
         $scope.cafeInfos = res;
         // check today's day
         switch (parseInt(moment(selectedDT).format('E'))) {
@@ -1442,24 +1552,24 @@ angular.module('starter.controllers', [])
             id = -1;
         }
 
-        CafeInfo.getTermBreak().then(function(res) {
+        CafeInfo.getHoliday().then(function(res) {
           var a = moment(selectedDT);
           for (var i = 0; i < res.length; i++) {
             var from = new Date(res[i].DateFrom);
             var to = new Date(res[i].DateTo);
             to.setDate(to.getDate() + 1);
-            var withinTermBreak = moment(a).isBetween(from, to);
-            console.log("Is within term break: " + withinTermBreak);
-            if (withinTermBreak) {
-              isTermBreak = true;
+            var withinHoliday = moment(a).isBetween(from, to);
+            console.log("Is within Holiday: " + withinHoliday);
+            if (withinHoliday) {
+              isHoliday = true;
               break;
             } else {
-              isTermBreak = false;
+              isHoliday = false;
             }
           }
           console.log(res);
         }).then(function() {
-          if (isTermBreak) {
+          if (isHoliday) {
             $scope.status = 'Closed';
           } else {
             // get today's remarks
@@ -1508,14 +1618,52 @@ angular.module('starter.controllers', [])
     }
 
     function popupCafeClose() {
-      $ionicPopup.alert({
-        title: 'Cafe is closed on selected datetime',
-        subTitle: 'Please check out our opening hours.',
+      $ionicPopup.confirm({
+        title: 'Our cafe is closed now',
+        template: 'Do you want to check on our Opening hours?',
+        cancelText: 'No',
+        okText: 'Yes',
         okType: 'button-royal'
       }).then(function(res) {
-        console.log("Cafe closed");
+        if (res) {
+          $scope.openModal();
+          console.log('Yes');
+        } else {
+          console.log('No');
+        }
       });
     }
+
+    $ionicModal.fromTemplateUrl('templates/openingHours.html', {
+      scope: $scope,
+      animation: 'slide-in-up'
+    }).then(function(modal) {
+      $scope.modal = modal;
+    });
+
+    $scope.openModal = function() {
+      $scope.modal.show();
+    };
+
+    $scope.closeModal = function() {
+      $scope.modal.hide();
+    };
+
+    $scope.$on('$destroy', function() {
+      $scope.modal.remove();
+    });
+
+    $scope.$on('modal.hidden', function() {
+      // Execute action
+    });
+
+    $scope.$on('modal.removed', function() {
+      // Execute action
+    });
+
+    CafeInfo.get().then(function(res) {
+      $scope.cafeInfos = res;
+    });
 
     $scope.continue = function() {
       var dt = moment($scope.preorder.value).format('YYYY-MM-DD HH:mm:ss');

@@ -10,7 +10,7 @@ var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.serv
       views: {
         'tab-home': {
           templateUrl: 'templates/food.html',
-          controller: 'HomeCtrl',
+          controller: 'homeCtrl',
           cache: false
         }
       }
@@ -20,7 +20,7 @@ var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.serv
       views: {
         'tab-drink': {
           templateUrl: 'templates/drink.html',
-          controller: 'DrinksCtrl',
+          controller: 'drinksCtrl',
           cache: false
         }
       }
@@ -30,7 +30,7 @@ var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.serv
       views: {
         'tab-special': {
           templateUrl: 'templates/special.html',
-          controller: 'SpecialCtrl',
+          controller: 'specialCtrl',
           cache: false
         }
       }
@@ -40,7 +40,7 @@ var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.serv
       views: {
         'tab-home': {
           templateUrl: 'templates/item.html',
-          controller: 'ItemCtrl',
+          controller: 'itemCtrl',
           cache: false
         }
       }
@@ -50,7 +50,7 @@ var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.serv
       views: {
         'tab-drink': {
           templateUrl: 'templates/item.html',
-          controller: 'ItemCtrl',
+          controller: 'itemCtrl',
           cache: false
         }
       }
@@ -60,7 +60,7 @@ var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.serv
       views: {
         'tab-special': {
           templateUrl: 'templates/item.html',
-          controller: 'ItemCtrl',
+          controller: 'itemCtrl',
           cache: false
         }
       }
@@ -68,19 +68,19 @@ var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.serv
     $stateProvider.state('item', {
       url: '/item/:id',
       templateUrl: 'templates/item.html',
-      controller: 'ItemCtrl',
+      controller: 'itemCtrl',
       cache: false
     });
     $stateProvider.state('promotions', {
       url: '/promotions',
       templateUrl: 'templates/promotions.html',
-      controller: 'PromoCtrl',
+      controller: 'promoCtrl',
       cache: false
     });
     $stateProvider.state('cart', {
       url: '/cart',
       templateUrl: 'templates/cart.html',
-      controller: 'CartCtrl',
+      controller: 'cartCtrl',
       cache: false
     });
     $stateProvider.state('history', {
@@ -98,31 +98,31 @@ var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.serv
     $stateProvider.state('about-us', {
       url: '/about-us',
       templateUrl: 'templates/about-us.html',
-      controller: 'AboutCtrl',
+      controller: 'aboutCtrl',
       cache: false
     });
     $stateProvider.state('contact-us', {
       url: '/contact-us',
       templateUrl: 'templates/contact-us.html',
-      controller: 'AddressCtrl',
+      controller: 'contactCtrl',
       cache: false
     });
     $stateProvider.state('login', {
       url: '/login',
       templateUrl: 'templates/login.html',
-      controller: 'AuthCtrl',
+      controller: 'authCtrl',
       cache: false
     });
     $stateProvider.state('register', {
       url: '/register',
       templateUrl: 'templates/register.html',
-      controller: 'AuthCtrl',
+      controller: 'authCtrl',
       cache: false
     });
     $stateProvider.state('feedback', {
       url: '/feedback',
       templateUrl: 'templates/feedback.html',
-      controller: 'FeedbackCtrl',
+      controller: 'feedbackCtrl',
       cache: false
     });
     $stateProvider.state('my-details', {

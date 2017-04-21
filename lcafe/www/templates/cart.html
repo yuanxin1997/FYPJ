@@ -37,7 +37,7 @@
             Discount:
               <span class="pull-right">${{cart.discount}}</span>
             </br>
-              <div id="comboMsg" ng-repeat="message in cart.comboMessage" >- {{message}}</div>
+              <div id="comboMsg" ng-repeat="message in cart.comboMessage" ng-click="openModal(message)">- {{message}}</div>
           </span>
 
           <span class="item">

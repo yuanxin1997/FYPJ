@@ -29,13 +29,13 @@
         </label>
 
         <span class="item item-input item-stacked-label">
-          <span class="input-label">Service</span>
-          <rating ng-model="rating.service" max="rating.max"></rating>
+          <span class="input-label">Food</span>
+          <rating ng-model="rating.food" max="rating.max"></rating>
         </span>
 
         <span class="item item-input item-stacked-label">
-          <span class="input-label">Food</span>
-          <rating ng-model="rating.food" max="rating.max"></rating>
+          <span class="input-label">Service</span>
+          <rating ng-model="rating.service" max="rating.max"></rating>
         </span>
 
         <button class="button button-block button-royal" ng-disabled="feedback.$invalid" ng-click="save(feedback)">Submit</button>

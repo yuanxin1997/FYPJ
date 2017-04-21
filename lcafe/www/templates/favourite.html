@@ -7,21 +7,14 @@
       </ion-refresher>
     <ion-list>
 
-
-        <div class="row item" ng-repeat="item in items" ng-init="init(item.itemID,$index)">
-          <div class="col col-25 favIcon" ui-sref="item({id: item.itemID})">
-              <img ng-src="http://172.20.129.181/LCafe_Menu_Images/{{ item.itemImg }}" alt="" />
-          </div>
-          <div class="col col-60 col-top item-text-wrap" ui-sref="item({id: item.itemID})">
+        <div class="item item-thumbnail-left item-text-wrap" ng-repeat="item in items" ng-init="init(item.itemID,$index)" >
+            <img ng-src="http://172.20.129.181/LCafe_Menu_Images/{{ item.itemImg }}" alt="" />
             <span class="fFont2">{{ item.itemName }}</span>
             <p class="fFont0">${{ item.itemPrice | number : 2}}</p>
-          </div>
-          <div class="col col-15 col-center">
+            <a ui-sref="item({id: item.itemID})" class="favButton"></a>
             <a ng-if="checkFav(item.itemID)" class="ion-android-favorite fFont1" ng-click="setFavFalse(item.itemID,$index)"></a>
             <a ng-if="!checkFav(item.itemID)" class="ion-android-favorite-outline fFont1" ng-click="setFavTrue(item.itemID,$index)"></a>
-          </div>
         </div>
-
 
     </ion-list>
 
