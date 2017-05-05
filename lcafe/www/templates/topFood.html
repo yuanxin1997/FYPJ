@@ -4,7 +4,7 @@
 
     <ion-list>
 
-      <ion-item class="item-thumbnail-left card item-text-wrap" ng-repeat="item in items" ui-sref="item({id: item.itemID})">
+      <ion-item class="item-thumbnail-left card item-text-wrap" ng-repeat="item in items" ui-sref="top10.foodItem({id: item.itemID})">
         <img ng-src="http://172.20.129.181/LCafe_Menu_Images/{{ item.itemImg }}" alt="" />
         <div class="tTop">
           <span class="royal tFont0">{{item.number}}</span>

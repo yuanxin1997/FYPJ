@@ -4,27 +4,26 @@
     <div class="list">
 
       <form name="feedback" novalidate>
-        <label class="item item-input item-stacked-label">
-          <span class="input-label">Subject</span>
-          <input type="text" name="subject" placeholder="Enter a subject" ng-model="fb.subject" required>
-        </label>
 
         <label class="item item-input item-stacked-label" ng-class="{ 'has_error' : feedback.name.$invalid && !feedback.name.$pristine }">
           <span class="input-label">Name</span>
-          <input type="text" name="name" placeholder="Enter your name" ng-model="fb.name" required pattern="[a-zA-Z]+">
+          <input type="text" name="name" placeholder="Enter your name" ng-model="fb.name" pattern="[a-zA-Z]+">
           <p style="color:red" ng-show="feedback.name.$invalid && !feedback.name.$pristine">Enter a correct name*</p>
         </label>
 
-
         <label class="item item-input item-stacked-label" ng-class="{ 'has_error' : feedback.email.$invalid && !feedback.email.$pristine }">
           <span class="input-label">Email</span>
-          <input type="email" name="email" placeholder="Enter your email" ng-model="fb.email" required>
+          <input type="email" name="email" placeholder="Enter your email" ng-model="fb.email">
           <p style="color:red" ng-show="feedback.email.$invalid && !feedback.email.$pristine">Enter a valid email*</p>
         </label>
 
+        <label class="item item-input item-stacked-label">
+          <span class="input-label">Subject*</span>
+          <input type="text" name="subject" placeholder="Enter a subject" ng-model="fb.subject" required>
+        </label>
 
         <label class="item item-input item-stacked-label">
-          <span class="input-label item-stacked-label">Comments</span>
+          <span class="input-label item-stacked-label">Comments*</span>
           <textarea placeholder="Enter your comments" name="comment" ng-model="fb.comment" required></textarea>
         </label>
 

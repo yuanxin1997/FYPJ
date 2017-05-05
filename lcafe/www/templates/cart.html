@@ -29,8 +29,8 @@
         <span class="list">
 
           <span class="item">
-            Total:
-              <span class="pull-right">${{cart.orderTotalPrice}}</span>
+            Net Total:
+              <span class="pull-right">${{cart.netTotal}}</span>
           </span>
 
           <span class="item" ng-if="cart.discount > 0">
@@ -46,7 +46,7 @@
           </span>
 
           <span class="item">
-            <b>Grand Total:<span class="pull-right">${{cart.grandTotal}}</span>
+            <b>Total:<span class="pull-right">${{cart.total}}</span>
             </b>
           </span>
 

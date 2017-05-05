@@ -15,14 +15,14 @@
         <span ng-if="item.itemQty>0" class="pull-right price royal">
           ${{ item.itemPrice }}
         </span>
-        <span ng-if="item.itemQty==0" class="pull-right price assertive">
+        <span ng-if="item.itemQty==0 || item.itemStatus=='Unavailable'" class="pull-right price assertive">
           <b>Out of Stock!</b>
         </span>
       </div>
     </div>
     <ion-list>
       <ion-item class="item-divider">
-        Quanity
+        Quantity
       </ion-item>
       <ion-item>
         <div class="quantityRow row">
@@ -39,7 +39,7 @@
           </div>
 
           <div class="col">
-            <span ng-disabled="input.quantity == item.itemQty" class="pull-right button button-royal button-card button-qty" ng-click="plusQty(item)">
+            <span ng-disabled="input.quantity == item.itemQty || item.itemStatus=='Unavailable'" class="pull-right button button-royal button-card button-qty" ng-click="plusQty(item)">
           <i class="ion-plus"></i>
         </span>
           </div>
@@ -49,20 +49,13 @@
         <ion-item class="item-divider">
           Item Request
         </ion-item>
-        <ion-checkbox ng-disabled="item.itemQty==0" class="item-checkbox-right checkbox-royal" value="item.itemRequest" ng-model="request.item">{{ item.itemRequest }}</ion-checkbox>
-      </div>
-
-      <ion-item class="item-divider">
-        Special Request
-      </ion-item>
-      <div class="padding">
-        <textarea class="taFont0" ng-disabled="item.itemQty==0" ng-model="request.special" placeholder="Enter your special request here" ></textarea>
+        <ion-checkbox ng-disabled="item.itemQty==0 || item.itemStatus=='Unavailable'" class="item-checkbox-right checkbox-royal" value="item.itemRequest" ng-model="request.item">{{ item.itemRequest }}</ion-checkbox>
       </div>
 
     </ion-list>
     <!-- Buttons -->
     <div class="row item-button-group">
-      <div ng-disabled="item.itemQty==0" class="col button button-royal" ng-click="addCart()">
+      <div ng-disabled="item.itemQty==0 || item.itemStatus=='Unavailable'" class="col button button-royal" ng-click="addCart()">
         <i class="text-2x ion-android-cart"></i>
         <span class="text-sm">ADD TO CART</span>
       </div>

@@ -11,16 +11,16 @@
     </div>
 
     <div class="list no-padding">
-      <div class="item item-menu" ng-repeat="item in specialMenu | filter:searchText | filter:customFilter | orderBy:sort.value" ui-sref="app.specialItem({id: item.itemID})">
+      <div class="item item-menu" ng-repeat="item in specialMenu | filter:searchText | filter:customFilter | orderBy:sort.value track by (temID + $index)" ui-sref="app.specialItem({id: item.itemID})">
 
-          <div class="ribbon"><span>special</span></div>
+          <div class="ribbon"><span>{{ item.label }}</span></div>
           <img ng-src="http://172.20.129.181/LCafe_Menu_Images/{{ item.itemImg }}" err-src="http://placehold.it/350x250" alt="{{ item.name }}"/>
 
         <div class="overlay"> <span class="pull-left royal">
           <b>{{ item.itemName }}</b>
         </span>
           <span class="pull-right royal">${{ item.itemPrice | number : 2 }}</span>
-          <span ng-if="item.itemQty==0" class="pull-left price assertive"><b>&nbsp Out of Stock!</b></span>
+          <span ng-if="item.itemQty==0 || item.itemStatus=='Unavailable'" class="pull-left price assertive"><b>&nbsp Out of Stock!</b></span>
         </div>
 
       </div>

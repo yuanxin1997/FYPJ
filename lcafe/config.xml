@@ -13,6 +13,7 @@
   <allow-navigation href="*"/>
   <allow-navigation href="http://172.20.130.161:8100"/>
   <preference name="webviewbounce" value="false"/>
+  <preference name="ShowSplashScreenSpinner" value="false"/>
   <preference name="UIWebViewBounce" value="false"/>
   <preference name="DisallowOverscroll" value="true"/>
   <preference name="SplashScreenDelay" value="4000"/>

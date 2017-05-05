@@ -1,10 +1,11 @@
 angular.module('starter.controllers', [])
   .constant('salt', 'bfawuiobwfb79237bf2628vf763vf32if732vfb937bvf89g7ase89vf2378vf812v783g92g793')
 
-  .controller('authCtrl', function($scope, $ionicHistory, Account, $rootScope, $state, $ionicPopup, md5, salt, Cart) {
+  .controller('authCtrl', function($scope, $ionicHistory, Account, $rootScope, $state, $ionicPopup, md5, salt, Cart, $ionicModal) {
 
     $scope.Account = {};
     $scope.dataSend = {};
+    $scope.dataSend2 = {};
 
     function popupLoginFail() {
       $ionicPopup.alert({
@@ -37,6 +38,42 @@ angular.module('starter.controllers', [])
       });
     }
 
+    function popupEmailNotFound() {
+      $ionicPopup.alert({
+        title: 'Email not found',
+        subTitle: 'This email does not exists in our record.',
+        okType: 'button-royal'
+      }).then(function(res) {
+        console.log('Eamil not found');
+      });
+    }
+
+    function popupSucessRequest() {
+      $ionicPopup.alert({
+        title: 'Request Sucessful',
+        subTitle: 'The link will be sent to you in a short while.',
+        okType: 'button-royal'
+      }).then(function(res) {
+        $ionicHistory.goBack();
+        console.log('Request Sucessful');
+      });
+    }
+
+    function popupSuccessReset() {
+      $ionicPopup.alert({
+        title: 'Password Reset Sucesssful',
+        subTitle: 'Your password has been reset.',
+        okType: 'button-royal'
+      }).then(function(res) {
+        if ($rootScope.payment != 'true') {
+          $state.go('app.food');
+        } else {
+          $state.go('payment');
+        }
+        console.log('Password Reset Successful');
+      });
+    }
+
     $scope.createAcc = function(acc, form) {
       $scope.dataSend.fullname = $scope.Account.fullname;
       $scope.dataSend.email = $scope.Account.email;
@@ -61,53 +98,104 @@ angular.module('starter.controllers', [])
 
     $scope.login = function(l, form) {
       var passwordHash = md5.createHash(l.password + salt);
-      Account.login(l.email, passwordHash).then(function(res) {
-        if (res.message != 'unsuccessful') {
-          var id = res.message;
-          localStorage.setItem("accountId", id);
-          Cart.setCustId(id);
-          $rootScope.menuState = "login";
-          console.log("Your id: " + localStorage.getItem("accountId"));
-          Account.get(localStorage.getItem('accountId')).then(function(response) {
-            localStorage.setItem("favouriteItemsID", response.favouriteItemsID);
+      Account.checkTempPassword(l.email).then(function(res) {
+        console.log(res.message);
+        if (res.message != 'exist') {
+          Account.login(l.email, passwordHash).then(function(res) {
+            if (res.message != 'unsuccessful') {
+              var id = res.message;
+              localStorage.setItem("accountId", id);
+              Cart.setCustId(id);
+              $rootScope.menuState = "login";
+              console.log("Your id: " + localStorage.getItem("accountId"));
+              Account.get(localStorage.getItem('accountId')).then(function(response) {
+                localStorage.setItem("favouriteItemsID", response.favouriteItemsID);
+              });
+              if ($rootScope.payment != 'true') {
+                $state.go('app.food');
+              } else {
+                $state.go('payment');
+              }
+            } else {
+              popupLoginFail();
+            }
           });
-          if ($rootScope.payment != 'true') {
-            $state.go('app.food');
-          } else {
-            $state.go('payment');
-          }
         } else {
-          popupLoginFail();
+          Account.loginWithTempPassword(l.email, l.password).then(function(res) {
+            console.log(res.message);
+            if (res.message != 'unsuccessful') {
+              var id = res.message;
+              localStorage.setItem("accountId", id);
+              Cart.setCustId(id);
+              $rootScope.menuState = "login";
+              console.log("Your id: " + localStorage.getItem("accountId"));
+              Account.get(localStorage.getItem('accountId')).then(function(response) {
+                localStorage.setItem("favouriteItemsID", response.favouriteItemsID);
+              });
+              $state.go('resetPassword');
+            } else {
+              popupLoginFail();
+            }
+          });
         }
+      });
+    };
+
+    $scope.requestLink = function(req, form) {
+      Account.checkEmail(req.email).then(function(res) {
+        if (res.message != 'unsuccessful') {
+          // Account.create($scope.dataSend).then(function(res) {
+          if (form) {
+            $scope.Account = {};
+            form.$setPristine();
+            form.$setUntouched();
+          }
+          popupSucessRequest();
+          // });
+        } else {
+          popupEmailNotFound();
+        }
+      });
+    };
+
+    $scope.changePassword = function(Password, form) {
+      $scope.dataSend2.custID = localStorage.getItem("accountId");
+      $scope.dataSend2.custPassword = md5.createHash(Password.new + salt);
+      $scope.dataSend2.token = localStorage.getItem("accessToken");
+      Account.changePassword($scope.dataSend2).then(function(response) {
+        if (form) {
+          $scope.Password = {};
+          form.$setPristine();
+          form.$setUntouched();
+        }
+        popupSuccessReset();
       });
     };
 
   })
 
-  .controller('homeCtrl', function($scope, $state, FoodMenu, Cart, $rootScope, $ionicSideMenuDelegate, $ionicModal, $rootScope, $filter, $cordovaNetwork, $ionicPlatform, $ionicPopup) {
+  .controller('homeCtrl', function($scope, $state, Menu, Cart, $rootScope, $ionicSideMenuDelegate, $ionicModal, $rootScope, $filter, $cordovaNetwork, $ionicPlatform, $ionicPopup, $timeout) {
 
     document.addEventListener("deviceready", function() {
-
       // listen for Online event
       $rootScope.$on('$cordovaNetwork:online', function(event, networkState) {
-        if ($rootScope.internetConnected == 'true') return;
-        $rootScope.internetConnected = 'true';
+        if ($rootScope.internetConnected == true) return;
+        $rootScope.internetConnected = true;
+        if (localStorage.getItem("accessToken") == null) {
+          $rootScope.notLoaded = true;
+        }
+        console.log("internetConnected: " + $rootScope.internetConnected);
       });
 
       // listen for Offline event
       $rootScope.$on('$cordovaNetwork:offline', function(event, networkState) {
-        if ($rootScope.internetConnected == 'false') return;
-        $rootScope.internetConnected = 'false';
-        $ionicPopup.alert({
-          title: 'No Internet Connection',
-          subTitle: 'Sorry, no Internet connectivity detected. Please reconnect and try again.',
-          okType: 'button-assertive'
-        }).then(function(res) {
-          ionic.Platform.exitApp();
-        });
+        if ($rootScope.internetConnected == false) return;
+        $rootScope.internetConnected = false;
+        console.log("internetConnected: " + $rootScope.internetConnected);
       });
 
     }, false);
+
 
     $scope.cart = Cart.get();
     $scope.sort = {
@@ -137,7 +225,7 @@ angular.module('starter.controllers', [])
       return arr;
     };
 
-    FoodMenu.all().then(function(menu) {
+    Menu.getFood().then(function(menu) {
       $scope.foodMenu = menu;
       for (var i = 0; i < menu.length; i++) {
         tempArr.push(menu[i].itemSubCategory);
@@ -255,7 +343,7 @@ angular.module('starter.controllers', [])
 
   })
 
-  .controller('drinksCtrl', function($scope, $state, DrinkMenu, $rootScope, $ionicModal, $filter) {
+  .controller('beverageCtrl', function($scope, $state, Menu, $rootScope, $ionicModal, $filter) {
 
     $scope.sort = {
       value: 'itemSubCategory'
@@ -284,7 +372,7 @@ angular.module('starter.controllers', [])
       return arr;
     };
 
-    DrinkMenu.all().then(function(menu) {
+    Menu.getBeverage().then(function(menu) {
       $scope.drinkMenu = menu;
       for (var i = 0; i < menu.length; i++) {
         tempArr.push(menu[i].itemSubCategory);
@@ -393,7 +481,7 @@ angular.module('starter.controllers', [])
 
   })
 
-  .controller('specialCtrl', function($scope, $state, SpecialMenu, $rootScope, $ionicModal, $timeout, $filter) {
+  .controller('specialCtrl', function($scope, $state, Menu, $rootScope, $ionicModal, $timeout, $filter) {
 
     $scope.sort = {
       value: 'itemSubCategory'
@@ -422,7 +510,7 @@ angular.module('starter.controllers', [])
       return arr;
     };
 
-    SpecialMenu.all().then(function(menu) {
+    Menu.getSpecial().then(function(menu) {
       $scope.specialMenu = menu;
       for (var i = 0; i < menu.length; i++) {
         tempArr.push(menu[i].itemSubCategory);
@@ -571,6 +659,30 @@ angular.module('starter.controllers', [])
       });
     }
 
+    function showSeparatePackaging() {
+      $ionicPopup.confirm({
+        title: 'Separate Packaging',
+        template: 'You have added more than one item, do you want to package separately?',
+        cancelText: 'No',
+        okText: 'Yes',
+        okType: 'button-royal'
+      }).then(function(res) {
+        if (res) {
+          itemToCart.separatePackaging = "Yes";
+          Cart.add(itemToCart);
+          console.log("Before item: " + JSON.stringify($scope.item));
+          console.log("After item: " + JSON.stringify(itemToCart));
+          showAddedAlert();
+        } else {
+          itemToCart.separatePackaging = "No"
+          Cart.add(itemToCart);
+          console.log("Before item: " + JSON.stringify($scope.item));
+          console.log("After item: " + JSON.stringify(itemToCart));
+          showAddedAlert();
+        }
+      });
+    }
+
     function showAddedAlert() {
       $ionicPopup.alert({
         title: 'Success',
@@ -592,7 +704,7 @@ angular.module('starter.controllers', [])
       $scope.item = response;
       console.log("Item id: " + id);
       checkFav(id);
-      if (itemToCart.itemQty == 0) {
+      if (itemToCart.itemQty == 0 || itemToCart.itemStatus == 'Unavailable') {
         quantitySelected = 0;
       } else {
         quantitySelected = 1;
@@ -617,11 +729,6 @@ angular.module('starter.controllers', [])
 
     $scope.addCart = function() {
       itemToCart.quantity = $scope.input.quantity;
-      if ($scope.request.special == '') {
-        itemToCart.specialRequest = "None";
-      } else {
-        itemToCart.specialRequest = $scope.request.special;
-      }
       if ($scope.request.item) {
         itemToCart.itemRequest = $scope.item.itemRequest;
       } else {
@@ -630,10 +737,15 @@ angular.module('starter.controllers', [])
       if (Cart.isDuplicate(itemToCart)) {
         showDuplicateAlert();
       } else {
-        Cart.add(itemToCart);
-        console.log("Before item: " + JSON.stringify($scope.item));
-        console.log("After item: " + JSON.stringify(itemToCart));
-        showAddedAlert();
+        if (itemToCart.quantity > 1) {
+          showSeparatePackaging(itemToCart);
+        } else {
+          itemToCart.separatePackaging = "No"
+          Cart.add(itemToCart);
+          console.log("Before item: " + JSON.stringify($scope.item));
+          console.log("After item: " + JSON.stringify(itemToCart));
+          showAddedAlert();
+        }
       }
     };
 
@@ -730,7 +842,7 @@ angular.module('starter.controllers', [])
             type: 'button-royal',
             onTap: function(e) {
               $rootScope.ordType = "dine-in";
-              $state.go('dine-in');
+              $state.go('dineIn');
             }
           },
           {
@@ -738,10 +850,28 @@ angular.module('starter.controllers', [])
             type: 'button-royal',
             onTap: function(e) {
               $rootScope.ordType = "pre-order";
-              $state.go('preorder');
+              $state.go('preOrder');
             }
           }
         ]
+      });
+    }
+
+    function showSeparatePackaging(item) {
+      $ionicPopup.confirm({
+        title: 'Separate Packaging',
+        template: 'You have added more than one item, do you want to package separately?',
+        cancelText: 'No',
+        okText: 'Yes',
+        okType: 'button-royal'
+      }).then(function(res) {
+        if (res) {
+          item.separatePackaging = "Yes";
+          Cart.get();
+        } else {
+          item.separatePackaging = "No"
+          Cart.get()
+        }
       });
     }
 
@@ -774,12 +904,17 @@ angular.module('starter.controllers', [])
 
     $scope.plusQty = function(item) {
       item.quantity++;
+      if (item.separatePackaging != "Yes") {
+        showSeparatePackaging(item);
+      }
       Cart.get();
     };
 
     $scope.minusQty = function(item) {
       if (item.quantity == 2) {
         showBanner('info', 'vertical');
+        item.separatePackaging = "No";
+        Cart.get();
       }
       if (item.quantity > 1) {
         item.quantity--;
@@ -795,8 +930,6 @@ angular.module('starter.controllers', [])
     $scope.submitOrder = function() {
       popupOrdTypePrompt();
     };
-
-
 
     $ionicModal.fromTemplateUrl('templates/promoModal.html', {
       scope: $scope,
@@ -828,7 +961,6 @@ angular.module('starter.controllers', [])
       $scope.modal.hide();
     };
 
-
     $scope.$on('$destroy', function() {
       $scope.modal.remove();
     });
@@ -840,6 +972,7 @@ angular.module('starter.controllers', [])
     $scope.$on('modal.removed', function() {
       // Execute action
     });
+
     $scope.$on('modal.shown', function() {
       console.log('Modal is shown!');
     });
@@ -874,11 +1007,25 @@ angular.module('starter.controllers', [])
 
   })
 
-  .controller('topCtrl', function($scope, $state, Top, $ionicPopup) {
+  .controller('topFoodCtrl', function($scope, $state, Top10, $ionicPopup) {
 
     $scope.items = [];
 
-    Top.get().then(function(res) {
+    Top10.getFood().then(function(res) {
+      for (var i = 0; i < res.length; i++) {
+        res[i].number = i + 1;
+        $scope.items.push(res[i]);
+      }
+      console.log($scope.items);
+    });
+
+  })
+
+  .controller('topBeverageCtrl', function($scope, $state, Top10, $ionicPopup) {
+
+    $scope.items = [];
+
+    Top10.getBeverage().then(function(res) {
       for (var i = 0; i < res.length; i++) {
         res[i].number = i + 1;
         $scope.items.push(res[i]);
@@ -1037,23 +1184,27 @@ angular.module('starter.controllers', [])
 
   })
 
-  .controller('ordDetailsCtrl', function($scope, $state, $stateParams, $ionicSideMenuDelegate, MyHistory) {
+  .controller('ordDetailsCtrl', function($scope, $state, $stateParams, $ionicSideMenuDelegate, MyHistory, $ionicModal) {
 
     var id = $stateParams.id;
     $scope.ordId = id;
     $scope.items = [];
+    $scope.qrCodePin = "";
+
 
     MyHistory.getOrderItems(id).then(function(res) {
-      $scope.ordGrandTotal = parseFloat(res[0].grandTotal).toFixed(2);
+      console.log(res);
+      $scope.ordTotal = parseFloat(res[0].total).toFixed(2);
       $scope.ordDiscount = parseFloat(res[0].discount).toFixed(2);
       $scope.ordGST = parseFloat(res[0].GST).toFixed(2);
-      $scope.ordTotal = parseFloat(res[0].grandTotal - res[0].GST + res[0].discount).toFixed(2);
+      $scope.ordNetTotal = parseFloat(res[0].total - res[0].GST + res[0].discount).toFixed(2);
       $scope.orderType = res[0].orderType;
       $scope.preorderDateTime = res[0].preorderDateTime;
       $scope.tableNumber = res[0].tableNumber;
       $scope.orderDateTime = res[0].orderDateTime;
-      $scope.InvoiceNo = res[0].InvoiceNo;
-      $scope.PIN = res[0].PIN;
+      $scope.transNo = res[0].transNo;
+      $scope.PIN = res[0].PIN.toString();
+
       for (var i = 0; i < res.length; i++) {
         res[i].itemPrice = parseFloat(res[i].itemPrice).toFixed(2);
         $scope.items.push(res[i]);
@@ -1061,11 +1212,35 @@ angular.module('starter.controllers', [])
       console.log("Order item Id: " + id);
     });
 
+    $scope.openQrCodeModal = function() {
+      $ionicModal.fromTemplateUrl('templates/qrCode.html', {
+        scope: $scope,
+        animation: 'slide-in-up'
+      }).then(function(modal) {
+        $scope.qrCodeModal = modal;
+        $scope.qrCodeModal.show();
+      });
+    };
 
+    $scope.closeQrCodeModal = function() {
+      $scope.qrCodeModal.remove();
+    };
+
+    $scope.$on('$destroy', function() {
+
+    });
+
+    $scope.$on('modal.hidden', function() {
+      // Execute action
+    });
+
+    $scope.$on('modal.removed', function() {
+      // Execute action
+    });
 
   })
 
-  .controller('detailsCtrl', function($scope, $state, $ionicSideMenuDelegate, Account, $ionicModal, $ionicPopup, md5, salt) {
+  .controller('myAccountCtrl', function($scope, $state, $ionicSideMenuDelegate, Account, $ionicModal, $ionicPopup, md5, salt) {
 
     $scope.Password = {};
     $scope.dataSend = {};
@@ -1146,6 +1321,8 @@ angular.module('starter.controllers', [])
   })
 
   .controller('contactCtrl', function($scope, $state, CafeInfo) {
+    $scope.noInternet = false;
+
 
     function initialize() {
       // set up begining position
@@ -1167,23 +1344,32 @@ angular.module('starter.controllers', [])
       $scope.map = map;
     }
 
-    CafeInfo.getContact().then(function(res) {
-      $scope.contact = {};
-      for (var i = 0; i < res.length; i++) {
-        if (res[i].contactType == "Phone") {
-          $scope.contact.phone = res[i].contactSource;
-        } else if (res[i].contactType == "Email") {
-          $scope.contact.email = res[i].contactSource;
-        } else if (res[i].contactType == "Instagram") {
-          $scope.contact.instagram = res[i].contactSource;
-        } else if (res[i].contactType == "Facebook") {
-          $scope.contact.facebook = res[i].contactSource;
-        } else if (res[i].contactType == "Twitter") {
-          $scope.contact.twitter = res[i].contactSource;
+    function getData() {
+      CafeInfo.getContact().then(function(res) {
+        if (res != "noInternet") {
+          $scope.contact = {};
+          for (var i = 0; i < res.length; i++) {
+            if (res[i].contactType == "Phone") {
+              $scope.contact.phone = res[i].contactSource;
+            } else if (res[i].contactType == "Email") {
+              $scope.contact.email = res[i].contactSource;
+            } else if (res[i].contactType == "Instagram") {
+              $scope.contact.instagram = res[i].contactSource;
+            } else if (res[i].contactType == "Facebook") {
+              $scope.contact.facebook = res[i].contactSource;
+            } else if (res[i].contactType == "Twitter") {
+              $scope.contact.twitter = res[i].contactSource;
+            }
+          }
+          console.log($scope.contact);
+          $scope.noInternet = false;
+        } else {
+          $scope.noInternet = true;
         }
-      }
-      console.log($scope.contact);
-    });
+      });
+    }
+
+    getData();
 
     $scope.init = function() {
       // load map when the ui is loaded
@@ -1194,13 +1380,18 @@ angular.module('starter.controllers', [])
       window.open(url, '_blank');
     };
 
+    $scope.reconnect = function() {
+      getData();
+    };
+
   })
 
-  .controller('aboutCtrl', function($scope, $state, CafeInfo, moment) {
+  .controller('aboutCtrl', function($scope, $state, $stateParams, CafeInfo, moment) {
 
     CafeInfo.get().then(function(res) {
       var day;
       var id;
+      var holidayMessage;
       var isHoliday = false;
       $scope.cafeInfos = res;
       $scope.todayRemark = "No Remarks";
@@ -1231,6 +1422,7 @@ angular.module('starter.controllers', [])
       }
 
       CafeInfo.getHoliday().then(function(res) {
+
         var a = moment();
         for (var i = 0; i < res.length; i++) {
           var from = new Date(res[i].DateFrom);
@@ -1240,6 +1432,7 @@ angular.module('starter.controllers', [])
           console.log("Is within Holiday: " + withinHoliday);
           if (withinHoliday) {
             isHoliday = true;
+            holidayMessage = res[i].Message;
             break;
           } else {
             isHoliday = false;
@@ -1249,7 +1442,7 @@ angular.module('starter.controllers', [])
       }).then(function() {
         if (isHoliday) {
           $scope.status = 'Closed';
-          $scope.todayRemark = "It's Holiday Time!";
+          $scope.todayRemark = "It's " + holidayMessage + "!";
         } else {
           // get today's remarks
           if (id != -1) {
@@ -1294,7 +1487,7 @@ angular.module('starter.controllers', [])
 
   })
 
-  .controller('dineInCtrl', function($scope, $state, $cordovaBarcodeScanner, Cart, $ionicModal, $ionicPopup, $rootScope, CafeInfo, moment, $q) {
+  .controller('dineInCtrl', function($scope, $state, $cordovaBarcodeScanner, Cart, $ionicModal, $ionicPopup, $rootScope, CafeInfo, moment, $q, $ionicScrollDelegate) {
 
     function cafeIsOpen() {
       var deferred = $q.defer();
@@ -1303,6 +1496,7 @@ angular.module('starter.controllers', [])
         var id;
         var isHoliday = false;
         $scope.cafeInfos = res;
+        console.log(res);
         // check today's day
         switch (moment().day()) {
           case 1:
@@ -1453,6 +1647,21 @@ angular.module('starter.controllers', [])
       $scope.cafeInfos = res;
     });
 
+    $scope.checkScroll = function() {
+      var currentTop = $ionicScrollDelegate.$getByHandle('scroller').getScrollPosition().top;
+      var maxTop = $ionicScrollDelegate.$getByHandle('scroller').getScrollView().__maxScrollTop;
+      if (currentTop == 0) {
+        console.log('top of scroll!');
+        $scope.bottom = false;
+        $scope.$apply();
+      }
+      if (currentTop >= maxTop) {
+        console.log('bottom of scroll!');
+        $scope.bottom = true;
+        $scope.$apply();
+      }
+    };
+
     $scope.scan = function() {
       cafeIsOpen().then(function(res) {
         if (res) {
@@ -1509,7 +1718,7 @@ angular.module('starter.controllers', [])
 
   })
 
-  .controller('preorderCtrl', function($scope, $state, $rootScope, Cart, $ionicModal, $ionicPopup, CafeInfo, $q) {
+  .controller('preOrderCtrl', function($scope, $state, $rootScope, Cart, $ionicModal, $ionicPopup, CafeInfo, $q, $ionicScrollDelegate) {
 
     var coeff = 1000 * 60 * 5;
     var date = new Date();
@@ -1665,6 +1874,21 @@ angular.module('starter.controllers', [])
       $scope.cafeInfos = res;
     });
 
+    $scope.checkScroll = function() {
+      var currentTop = $ionicScrollDelegate.$getByHandle('scroller').getScrollPosition().top;
+      var maxTop = $ionicScrollDelegate.$getByHandle('scroller').getScrollView().__maxScrollTop;
+      if (currentTop == 0) {
+        console.log('top of scroll!');
+        $scope.bottom = false;
+        $scope.$apply();
+      }
+      if (currentTop >= maxTop) {
+        console.log('bottom of scroll!');
+        $scope.bottom = true;
+        $scope.$apply();
+      }
+    };
+
     $scope.continue = function() {
       var dt = moment($scope.preorder.value).format('YYYY-MM-DD HH:mm:ss');
       cafeIsOpen(dt).then(function(res) {
@@ -1691,6 +1915,7 @@ angular.module('starter.controllers', [])
 
   .controller('paymentCtrl', function($scope, $rootScope, $state, $ionicPopup, $ionicLoading, Cart, Account, $ionicModal) {
 
+    $scope.pin = "";
     var cart = Cart.get();
 
     function popupPaymentSuccess() {
@@ -1747,7 +1972,7 @@ angular.module('starter.controllers', [])
         reference: 'CC843154841254',
         name: res.custFullName,
         identifier: 'CC6541564531641321',
-        amount: '$' + cart.grandTotal
+        amount: '$' + cart.total
       };
     });
 

@@ -1,8 +1,15 @@
-<ion-modal-view class="opModal" style="transform: translate(-50%, -50%);">
+<ion-modal-view class="opModal" style="transform: translate(-50%, -50%);" >
 
-  <ion-content class="light-bg">
+  <div id="slideArrowDown" ng-show="!bottom">
+    ↓
+  </div>
+  <div id="slideArrowUp" ng-show="bottom">
+    ↑
+  </div>
 
-    <div class="list popupCafeInfo" >
+  <ion-content class="light-bg" >
+     <ion-scroll delegate-handle="scroller" on-scroll="checkScroll()" direction="y" style="width: 100%; height: 100%">
+    <div class="list popupCafeInfo">
       <label class="item item-input item-stacked-label" ng-repeat="cafeInfo in cafeInfos">
         <span class="input-label dark" style="">{{ cafeInfo.day }}</span>
         <span class="data" >{{ cafeInfo.openinghours }} - {{ cafeInfo.closinghours }}</span>
@@ -16,7 +23,7 @@
       <span class="data">Closed</span>
       </label>
     </div>
-
+     </ion-scroll>
   </ion-content>
 
 </ion-modal-view>

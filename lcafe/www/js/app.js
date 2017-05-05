@@ -1,4 +1,4 @@
-var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.services', 'ngCordova', 'ion-datetime-picker', 'ion-floating-menu', 'angular-md5', 'ionic.rating', 'jett.ionic.content.banner', 'angularMoment'])
+var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.services', 'ngCordova', 'ion-datetime-picker', 'ion-floating-menu', 'angular-md5', 'ionic.rating', 'jett.ionic.content.banner', 'angularMoment', 'ja.qr'])
   .config(function($stateProvider, $urlRouterProvider) {
     $stateProvider.state('app', {
       url: '/app',
@@ -15,12 +15,12 @@ var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.serv
         }
       }
     });
-    $stateProvider.state('app.drink', {
-      url: '/drink',
+    $stateProvider.state('app.beverage', {
+      url: '/beverage',
       views: {
-        'tab-drink': {
-          templateUrl: 'templates/drink.html',
-          controller: 'drinksCtrl',
+        'tab-beverage': {
+          templateUrl: 'templates/beverage.html',
+          controller: 'beverageCtrl',
           cache: false
         }
       }
@@ -45,10 +45,10 @@ var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.serv
         }
       }
     });
-    $stateProvider.state('app.drinkItem', {
+    $stateProvider.state('app.beverageItem', {
       url: '/item/:id',
       views: {
-        'tab-drink': {
+        'tab-beverage': {
           templateUrl: 'templates/item.html',
           controller: 'itemCtrl',
           cache: false
@@ -59,6 +59,51 @@ var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.serv
       url: '/item/:id',
       views: {
         'tab-special': {
+          templateUrl: 'templates/item.html',
+          controller: 'itemCtrl',
+          cache: false
+        }
+      }
+    });
+    $stateProvider.state('top10', {
+      url: '/top10',
+      abstract: true,
+      templateUrl: 'templates/top10Tabs.html'
+    });
+    $stateProvider.state('top10.food', {
+      url: '/top10Food',
+      views: {
+        'top10Tab-food': {
+          templateUrl: 'templates/topFood.html',
+          controller: 'topFoodCtrl',
+          cache: false
+        }
+      }
+    });
+    $stateProvider.state('top10.beverage', {
+      url: '/top10Beverage',
+      views: {
+        'top10Tab-beverage': {
+          templateUrl: 'templates/topBeverage.html',
+          controller: 'topBeverageCtrl',
+          cache: false
+        }
+      }
+    });
+    $stateProvider.state('top10.foodItem', {
+      url: '/item/:id',
+      views: {
+        'top10Tab-food': {
+          templateUrl: 'templates/item.html',
+          controller: 'itemCtrl',
+          cache: false
+        }
+      }
+    });
+    $stateProvider.state('top10.beverageItem', {
+      url: '/item/:id',
+      views: {
+        'top10Tab-beverage': {
           templateUrl: 'templates/item.html',
           controller: 'itemCtrl',
           cache: false
@@ -89,21 +134,21 @@ var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.serv
       controller: 'historyCtrl',
       cache: false
     });
-    $stateProvider.state('order-details', {
+    $stateProvider.state('orderDetails', {
       url: '/order-details/:id',
-      templateUrl: 'templates/order-details.html',
+      templateUrl: 'templates/orderDetails.html',
       controller: 'ordDetailsCtrl',
       cache: false
     });
-    $stateProvider.state('about-us', {
-      url: '/about-us',
-      templateUrl: 'templates/about-us.html',
+    $stateProvider.state('aboutUs', {
+      url: '/aboutUs',
+      templateUrl: 'templates/aboutUs.html',
       controller: 'aboutCtrl',
       cache: false
     });
-    $stateProvider.state('contact-us', {
-      url: '/contact-us',
-      templateUrl: 'templates/contact-us.html',
+    $stateProvider.state('contactUs', {
+      url: '/contactUs',
+      templateUrl: 'templates/contactUs.html',
       controller: 'contactCtrl',
       cache: false
     });
@@ -113,9 +158,21 @@ var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.serv
       controller: 'authCtrl',
       cache: false
     });
-    $stateProvider.state('register', {
-      url: '/register',
-      templateUrl: 'templates/register.html',
+    $stateProvider.state('resetPassword', {
+      url: '/resetPassword',
+      templateUrl: 'templates/resetPassword.html',
+      controller: 'authCtrl',
+      cache: false
+    });
+    $stateProvider.state('signUp', {
+      url: '/signUp',
+      templateUrl: 'templates/signUp.html',
+      controller: 'authCtrl',
+      cache: false
+    });
+    $stateProvider.state('forgotPassword', {
+      url: '/forgotpassword',
+      templateUrl: 'templates/forgotPassword.html',
       controller: 'authCtrl',
       cache: false
     });
@@ -125,16 +182,10 @@ var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.serv
       controller: 'feedbackCtrl',
       cache: false
     });
-    $stateProvider.state('my-details', {
-      url: '/my-details',
-      templateUrl: 'templates/my-details.html',
-      controller: 'detailsCtrl',
-      cache: false
-    });
-    $stateProvider.state('top', {
-      url: '/top',
-      templateUrl: 'templates/top.html',
-      controller: 'topCtrl',
+    $stateProvider.state('myAccount', {
+      url: '/myAccount',
+      templateUrl: 'templates/myAccount.html',
+      controller: 'myAccountCtrl',
       cache: false
     });
     $stateProvider.state('favourite', {
@@ -143,16 +194,16 @@ var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.serv
       controller: 'favouriteCtrl',
       cache: false
     });
-    $stateProvider.state('dine-in', {
-      url: '/dine-in',
-      templateUrl: 'templates/dine-in.html',
+    $stateProvider.state('dineIn', {
+      url: '/dineIn',
+      templateUrl: 'templates/dineIn.html',
       controller: 'dineInCtrl',
       cache: false
     });
-    $stateProvider.state('preorder', {
-      url: '/preorder',
-      templateUrl: 'templates/preorder.html',
-      controller: 'preorderCtrl',
+    $stateProvider.state('preOrder', {
+      url: '/preOrder',
+      templateUrl: 'templates/preOrder.html',
+      controller: 'preOrderCtrl',
       cache: false
     });
     $stateProvider.state('payment', {
@@ -164,43 +215,22 @@ var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.serv
     $urlRouterProvider.otherwise('/app/food');
   })
   .config(function($ionicConfigProvider) {
-    // $ionicConfigProvider.tabs.position('top');
-    // $ionicConfigProvider.tabs.style('striped')
-    // $ionicConfigProvider.backButton.text('Go Back').icon('ion-chevron-left');
+    $ionicConfigProvider.tabs.style('striped');
+    $ionicConfigProvider.tabs.position('top');
   })
-  .run(function($ionicPlatform, $http, Token, $rootScope, Cart) {
-    // initialize
-    var acccountId = localStorage.getItem('accountId');
-    console.log("Your token: " + localStorage.getItem("accessToken"));
-    console.log("Your id：" + acccountId);
-    if (acccountId == null) {
-      localStorage.setItem('accountId', '');
-    }
+  .run(function($ionicPlatform, $rootScope, Initialize, Cart) {
 
-    var favourite = localStorage.getItem("favouriteItemsID");
-    if (favourite == null) {
-      localStorage.setItem("favouriteItemsID", '');
-    }
+    //localStorage.clear();
 
-    // check token if it is stored in localDB
     if (localStorage.getItem("accessToken") == null) {
-      Token.get().then(function(response) {
-        localStorage.setItem("accessToken", response.token);
-        console.log("New token: " + localStorage.getItem("accessToken"));
-        console.log("Your id：" + localStorage.getItem('accountId'));
-      });
-    } else {
-      // if there is a token, check if token is valid
-      Token.checkToken(localStorage.getItem("accessToken")).then(function(response) {
-        if (response.message == "unsuccessful") {
-          Token.get().then(function(response) {
-            //not valid
-            console.log("Old token: " + response.token);
-            localStorage.setItem("accessToken", response.token);
-          });
-        }
-      });
+      $rootScope.notLoaded = false;
+      console.log("Internet Assets is loaded: " + $rootScope.notLoaded);
     }
+
+    // initialize accountId and favourite
+    Initialize.init();
+    // check token if it is stored in localDB
+    Initialize.token();
 
     // run ionic platform
     $ionicPlatform.ready(function() {
