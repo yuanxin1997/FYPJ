@@ -619,18 +619,17 @@ angular.module('starter.controllers', [])
 
   })
 
-  .controller('itemCtrl', function($scope, $state, Items, Cart, $stateParams, $ionicPopup, $timeout, $ionicHistory, Favourite, $rootScope) {
+  .controller('itemCtrl', function($scope, $state, Items, Cart, $stateParams, $ionicPopup, $timeout, $ionicHistory, Favourite, $rootScope, $filter) {
 
     var id = $stateParams.id;
     var itemToCart;
     var quantitySelected;
+    $scope.itemRequests = [];
+    var checked = [];
     $scope.dataSend = {};
     $scope.item = {};
     $scope.input = {};
-    $scope.request = {
-      special: '',
-      item: false
-    };
+    $scope.doNotAskAgain = false;
 
     function checkFav(id) {
       var FavItems = localStorage.getItem("favouriteItemsID").split(',');
@@ -668,17 +667,10 @@ angular.module('starter.controllers', [])
         okType: 'button-royal'
       }).then(function(res) {
         if (res) {
-          itemToCart.separatePackaging = "Yes";
-          Cart.add(itemToCart);
-          console.log("Before item: " + JSON.stringify($scope.item));
-          console.log("After item: " + JSON.stringify(itemToCart));
-          showAddedAlert();
+          $scope.input.separatePackaging = "Yes";
         } else {
-          itemToCart.separatePackaging = "No"
-          Cart.add(itemToCart);
-          console.log("Before item: " + JSON.stringify($scope.item));
-          console.log("After item: " + JSON.stringify(itemToCart));
-          showAddedAlert();
+          $scope.input.separatePackaging = "No";
+          $scope.doNotAskAgain = true;
         }
       });
     }
@@ -699,10 +691,17 @@ angular.module('starter.controllers', [])
     }
 
     Items.getItem(id).then(function(response) {
-      itemToCart = angular.copy(response);
-      response.itemPrice = parseFloat(response.itemPrice).toFixed(2);
-      $scope.item = response;
       console.log("Item id: " + id);
+      var allItemRequests = response.itemRequest.split(';');
+      $scope.chkItemRequest = allItemRequests[0];
+      for (var i = 0; i < allItemRequests.length - 1; i++) {
+        var obj = {};
+        obj.text = allItemRequests[i];
+        obj.checked = false;
+        $scope.itemRequests.push(obj);
+      }
+      itemToCart = angular.copy(response);
+      $scope.item = response;
       checkFav(id);
       if (itemToCart.itemQty == 0 || itemToCart.itemStatus == 'Unavailable') {
         quantitySelected = 0;
@@ -711,16 +710,43 @@ angular.module('starter.controllers', [])
       }
     }).then(function(response) {
       $scope.input.quantity = quantitySelected;
+      $scope.input.separatePackaging = "No";
     });
+
+    $scope.changeItem = function(item) {
+      for (var i = 0; i < $scope.itemRequests.length; i++) {
+        if (item.text != $scope.itemRequests[i].text) {
+          $scope.itemRequests[i].checked = false;
+        }
+      }
+      var enableditem = $filter('filter')($scope.itemRequests, {
+        checked: true
+      });
+      $scope.checkedArr = [];
+      angular.forEach(enableditem, function(item) {
+        $scope.checkedArr.push(item.text);
+      });
+      checked = $scope.checkedArr;
+      if (checked[0] != undefined) {
+        console.log(checked[0]);
+      }
+    };
 
     $scope.plusQty = function(item) {
       console.log("+");
       quantitySelected++;
       $scope.input.quantity = quantitySelected;
+      if ($scope.input.separatePackaging != "Yes" && !$scope.doNotAskAgain) {
+        showSeparatePackaging();
+      }
     };
 
     $scope.minusQty = function(item) {
       console.log("-");
+      if ($scope.input.quantity == 2) {
+        $scope.input.separatePackaging = "No";
+        $scope.doNotAskAgain = false;
+      }
       if ($scope.input.quantity > 1) {
         quantitySelected--;
         $scope.input.quantity = quantitySelected;
@@ -729,23 +755,19 @@ angular.module('starter.controllers', [])
 
     $scope.addCart = function() {
       itemToCart.quantity = $scope.input.quantity;
-      if ($scope.request.item) {
-        itemToCart.itemRequest = $scope.item.itemRequest;
+      itemToCart.separatePackaging = $scope.input.separatePackaging
+      if (checked[0] != undefined) {
+        itemToCart.itemRequest = checked[0];
       } else {
         itemToCart.itemRequest = "None";
       }
       if (Cart.isDuplicate(itemToCart)) {
         showDuplicateAlert();
       } else {
-        if (itemToCart.quantity > 1) {
-          showSeparatePackaging(itemToCart);
-        } else {
-          itemToCart.separatePackaging = "No"
-          Cart.add(itemToCart);
-          console.log("Before item: " + JSON.stringify($scope.item));
-          console.log("After item: " + JSON.stringify(itemToCart));
-          showAddedAlert();
-        }
+        Cart.add(itemToCart);
+        console.log("Before item: " + JSON.stringify($scope.item));
+        console.log("After item: " + JSON.stringify(itemToCart));
+        showAddedAlert();
       }
     };
 
@@ -831,6 +853,7 @@ angular.module('starter.controllers', [])
 
     var contentBannerInstance;
     $scope.cart = Cart.get();
+    $scope.doNotAskAgain = false;
 
     function popupOrdTypePrompt() {
       $ionicPopup.show({
@@ -870,6 +893,7 @@ angular.module('starter.controllers', [])
           Cart.get();
         } else {
           item.separatePackaging = "No"
+          $scope.doNotAskAgain = true;
           Cart.get()
         }
       });
@@ -904,7 +928,7 @@ angular.module('starter.controllers', [])
 
     $scope.plusQty = function(item) {
       item.quantity++;
-      if (item.separatePackaging != "Yes") {
+      if (item.separatePackaging != "Yes" && !$scope.doNotAskAgain) {
         showSeparatePackaging(item);
       }
       Cart.get();
@@ -914,6 +938,7 @@ angular.module('starter.controllers', [])
       if (item.quantity == 2) {
         showBanner('info', 'vertical');
         item.separatePackaging = "No";
+        $scope.doNotAskAgain = false;
         Cart.get();
       }
       if (item.quantity > 1) {
@@ -995,6 +1020,9 @@ angular.module('starter.controllers', [])
     // Promotions.emailTest().then(function(res) {
     //   console.log(res);
     // });
+    Promotions.getCombo().then(function(res) {
+      console.log(res);
+    })
     $scope.hasPromo = function(length) {
       if (length < 1) {
         return true;
@@ -1171,8 +1199,6 @@ angular.module('starter.controllers', [])
       console.log(res);
       if (res != 'Empty') {
         for (var i = 0; i < res.length; i++) {
-          var date = new Date(res[i].orderDateTime);
-          res[i].orderDateTime = date;
           $scope.orders.push(res[i]);
         }
       } else {
@@ -1197,11 +1223,11 @@ angular.module('starter.controllers', [])
       $scope.ordTotal = parseFloat(res[0].total).toFixed(2);
       $scope.ordDiscount = parseFloat(res[0].discount).toFixed(2);
       $scope.ordGST = parseFloat(res[0].GST).toFixed(2);
-      $scope.ordNetTotal = parseFloat(res[0].total - res[0].GST + res[0].discount).toFixed(2);
+      $scope.ordNetTotal = parseFloat(res[0].total + res[0].discount).toFixed(2);
       $scope.orderType = res[0].orderType;
-      $scope.preorderDateTime = res[0].preorderDateTime;
+      $scope.preorderDateTime = moment(res[0].preorderDateTime).format('DD-MMM-YYYY h:mm:ss A');
       $scope.tableNumber = res[0].tableNumber;
-      $scope.orderDateTime = res[0].orderDateTime;
+      $scope.orderDateTime = moment(res[0].orderDateTime).format('DD-MMM-YYYY h:mm:ss A');
       $scope.transNo = res[0].transNo;
       $scope.PIN = res[0].PIN.toString();
 
@@ -1562,9 +1588,17 @@ angular.module('starter.controllers', [])
               var afterTime = moment().hour(hrOpen).minutes(minOpen);
               var beforeTime = moment().hour(hrClose).minutes(minClose);
 
+              var fifteenMinutesFromNow = moment().hour(hrClose).minutes(minClose).subtract(900, 'seconds');
+              console.log("Is within 15 minutes before closing: " + moment(d).isBetween(fifteenMinutesFromNow, beforeTime));
+
               console.log("Is between time: " + moment(d).isBetween(afterTime, beforeTime));
               if (moment(d).isBetween(afterTime, beforeTime)) {
-                $scope.status = 'Open';
+                // $scope.status = 'Open';
+                if (moment(d).isBetween(fifteenMinutesFromNow, beforeTime)) {
+                  $scope.status = 'WithinFifteenMinutesBeforeClose';
+                } else {
+                  $scope.status = 'Open';
+                }
               } else {
                 $scope.status = 'Closed';
               }
@@ -1574,9 +1608,11 @@ angular.module('starter.controllers', [])
           }
           console.log('Current status is: ' + $scope.status);
           if ($scope.status == 'Closed') {
-            deferred.resolve(false);
-          } else {
-            deferred.resolve(true);
+            deferred.resolve('Closed');
+          } else if ($scope.status == 'Open') {
+            deferred.resolve('Open');
+          } else if ($scope.status == 'WithinFifteenMinutesBeforeClose') {
+            deferred.resolve('WithinFifteenMinutesBeforeClose');
           }
         });
       });
@@ -1613,6 +1649,16 @@ angular.module('starter.controllers', [])
         } else {
           $state.go('payment');
         }
+      });
+    }
+
+    function popupUpNoService() {
+      $ionicPopup.alert({
+        title: 'No service',
+        template: 'Cafe is closing within 15 minutes.',
+        okType: 'button-royal'
+      }).then(function(res) {
+        console.log("No service");
       });
     }
 
@@ -1664,7 +1710,8 @@ angular.module('starter.controllers', [])
 
     $scope.scan = function() {
       cafeIsOpen().then(function(res) {
-        if (res) {
+        console.log(res);
+        if (res == "Open") {
           $cordovaBarcodeScanner
             .scan()
             .then(function(barcodeData) {
@@ -1673,7 +1720,9 @@ angular.module('starter.controllers', [])
             }, function(error) {
               console.log(error);
             });
-        } else {
+        } else if (res == "WithinFifteenMinutesBeforeClose") {
+          popupUpNoService();
+        } else if (res == "Closed") {
           popupCafeClose();
         }
       });
@@ -1681,7 +1730,8 @@ angular.module('starter.controllers', [])
 
     $scope.enterTableNum = function() {
       cafeIsOpen().then(function(res) {
-        if (res) {
+        console.log(res);
+        if (res == "Open") {
           $scope.data = {};
           $ionicPopup.show({
             templateUrl: 'templates/tableNumber.html',
@@ -1706,7 +1756,9 @@ angular.module('starter.controllers', [])
               popupScanSucess(res);
             }
           });
-        } else {
+        } else if (res == "WithinFifteenMinutesBeforeClose") {
+          popupUpNoService();
+        } else if (res == "Closed") {
           popupCafeClose();
         }
       });
@@ -1805,9 +1857,28 @@ angular.module('starter.controllers', [])
               var afterTime = moment().hour(hrOpen).minutes(minOpen);
               var beforeTime = moment().hour(hrClose).minutes(minClose);
 
+              var fifteenMinutesToNow = moment().hour(hrOpen).minutes(minOpen).add(900, 'seconds');
+              console.log("Is within 15 minutes after opening: " + moment(d).isBetween(afterTime, fifteenMinutesToNow));
+
+              var fifteenMinutesFromNow = moment().hour(hrClose).minutes(minClose).subtract(900, 'seconds');
+              console.log("Is within 15 minutes before closing: " + moment(d).isBetween(fifteenMinutesFromNow, beforeTime));
+
+              var now = moment();
+              console.log("Time has passed: " + moment(d).isBefore(now));
+
               console.log("Is between time: " + moment(d).isBetween(afterTime, beforeTime));
               if (moment(d).isBetween(afterTime, beforeTime)) {
-                $scope.status = 'Open';
+                if (moment(d).isBefore(now)) {
+                  $scope.status = "BeforeNow";
+                } else {
+                  if (moment(d).isBetween(fifteenMinutesFromNow, beforeTime)) {
+                    $scope.status = 'WithinFifteenMinutesBeforeClose';
+                  } else if (moment(d).isBetween(afterTime, fifteenMinutesToNow)) {
+                    $scope.status = 'WithinFifteenMinutesAfterOpen';
+                  } else {
+                    $scope.status = 'Open';
+                  }
+                }
               } else {
                 $scope.status = 'Closed';
               }
@@ -1815,11 +1886,17 @@ angular.module('starter.controllers', [])
               $scope.status = 'Closed';
             }
           }
-          console.log('That day status is: ' + $scope.status);
+          console.log('Current status is: ' + $scope.status);
           if ($scope.status == 'Closed') {
-            deferred.resolve(false);
-          } else {
-            deferred.resolve(true);
+            deferred.resolve('Closed');
+          } else if ($scope.status == 'BeforeNow') {
+            deferred.resolve('BeforeNow');
+          } else if ($scope.status == 'Open') {
+            deferred.resolve('Open');
+          } else if ($scope.status == 'WithinFifteenMinutesBeforeClose') {
+            deferred.resolve('WithinFifteenMinutesBeforeClose');
+          } else if ($scope.status == 'WithinFifteenMinutesAfterOpen') {
+            deferred.resolve('WithinFifteenMinutesAfterOpen');
           }
         });
       });
@@ -1828,7 +1905,7 @@ angular.module('starter.controllers', [])
 
     function popupCafeClose() {
       $ionicPopup.confirm({
-        title: 'Our cafe is closed now',
+        title: 'Our cafe is closed on selected date-time',
         template: 'Do you want to check on our Opening hours?',
         cancelText: 'No',
         okText: 'Yes',
@@ -1840,6 +1917,36 @@ angular.module('starter.controllers', [])
         } else {
           console.log('No');
         }
+      });
+    }
+
+    function popupUpNoService() {
+      $ionicPopup.alert({
+        title: 'No service',
+        template: 'Cafe is closing within 15 minutes.',
+        okType: 'button-royal'
+      }).then(function(res) {
+        console.log("No service");
+      });
+    }
+
+    function popupNoEarlyPreOrder() {
+      $ionicPopup.alert({
+        title: 'No early Pre-order',
+        template: '15 minutes preparation is needed after opening.',
+        okType: 'button-royal'
+      }).then(function(res) {
+        console.log("No early Pre-order");
+      });
+    }
+
+    function popupTimePassed() {
+      $ionicPopup.alert({
+        title: 'Selected time have passed',
+        template: 'Please select time that is after current time.',
+        okType: 'button-royal'
+      }).then(function(res) {
+        console.log("Selected time have passed");
       });
     }
 
@@ -1892,7 +1999,8 @@ angular.module('starter.controllers', [])
     $scope.continue = function() {
       var dt = moment($scope.preorder.value).format('YYYY-MM-DD HH:mm:ss');
       cafeIsOpen(dt).then(function(res) {
-        if (res) {
+        console.log(res);
+        if (res == "Open") {
           Cart.setPreorder(dt);
           console.log("Pre-order dateTime: " + dt);
           if (localStorage.getItem("accountId") == "") {
@@ -1901,7 +2009,13 @@ angular.module('starter.controllers', [])
           } else {
             $state.go('payment');
           }
-        } else {
+        } else if (res == "BeforeNow") {
+          popupTimePassed();
+        } else if (res == "WithinFifteenMinutesBeforeClose") {
+          popupUpNoService();
+        } else if (res == "WithinFifteenMinutesAfterOpen") {
+          popupNoEarlyPreOrder();
+        } else if (res == "Closed") {
           popupCafeClose();
         }
       });

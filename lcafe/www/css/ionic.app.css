@@ -9965,6 +9965,9 @@ a.button {
   src: local("Arvo"), url(../fonts/Arvo-Regular.ttf) format("woff2");
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215; }
 
+.transparent {
+  background: transparent !important; }
+
 a {
   color: inherit;
   text-decoration: none; }
@@ -10240,6 +10243,12 @@ a {
   .item.card .button-card.button-qty {
     font-size: 1em; }
 
+.item.card .separatePackaging {
+  position: absolute;
+  line-height: 7em;
+  font-size: 0.9em;
+  color: green; }
+
 .dineIn-page .card {
   margin-top: 0.4em; }
 
@@ -10269,9 +10278,6 @@ a {
   left: 50%;
   transform: translate(-50%, -50%);
   width: 100%; }
-
-.transparent {
-  background: transparent !important; }
 
 .image-modal {
   width: 100% !important;
@@ -10392,6 +10398,13 @@ p.info {
   left: 50%;
   animation-name: fadeIn;
   animation-duration: 1s; }
+
+.qrImage {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); }
 
 ul.rating li {
   display: inline;

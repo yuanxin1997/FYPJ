@@ -18,8 +18,8 @@
           <div ng-disabled="item.quantity < 2" class="pull-right button button-royal button-card button-qty" ng-click="minusQty(item)">
             <i class="ion-minus"></i>
           </div>
+          <div class="separatePackaging" ng-if="item.separatePackaging=='Yes'">Separate Packaging*</div>
         </div>
-
         <ion-option-button class="assertive-bg" ng-click="remove(item.itemID)">
           <i class="icon ion-trash-a padding light"></i>
         </ion-option-button>
@@ -41,7 +41,7 @@
           </span>
 
           <span class="item">
-            GST:
+            GST (Inclusive):
               <span class="pull-right">${{cart.GST}}</span>
           </span>
 

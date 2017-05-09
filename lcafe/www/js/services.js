@@ -702,7 +702,7 @@ app.factory('Cart', function($http, moment, APIurl, $q) {
   function calculateGrandTotal() {
     var deferred = $q.defer();
     if (cart.netTotal != 0) {
-      var total = (parseFloat(cart.GST) + (parseFloat(cart.netTotal - cart.discount)));
+      var total = parseFloat(cart.netTotal - cart.discount);
       cart.total = parseFloat(total).toFixed(2);
       persist();
       deferred.resolve('===========================================Grand is done: ' + cart.total);
@@ -843,6 +843,19 @@ app.factory('Promotions', function($http, APIurl) {
   return {
     getAll: function() {
       var url = APIurl + "WebserviceCafe.asmx/retrieveAllPromos?";
+      return $http({
+        method: 'GET',
+        url: url + "token=" + localStorage.getItem("accessToken"),
+        dataType: "json",
+        contentType: "application/json; charset=utf-8"
+      }).then(function successCallback(response) {
+        return response.data;
+      }, function errorCallback(response) {
+        return response.data;
+      });
+    },
+    getCombo: function() {
+      var url = APIurl + "WebserviceCafe.asmx/retrieveCombos?";
       return $http({
         method: 'GET',
         url: url + "token=" + localStorage.getItem("accessToken"),

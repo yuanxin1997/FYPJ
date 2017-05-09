@@ -13,7 +13,7 @@
           <b>{{ item.itemDesc }}</b>
         </span>
         <span ng-if="item.itemQty>0" class="pull-right price royal">
-          ${{ item.itemPrice }}
+          ${{ item.itemPrice | number : 2 }}
         </span>
         <span ng-if="item.itemQty==0 || item.itemStatus=='Unavailable'" class="pull-right price assertive">
           <b>Out of Stock!</b>
@@ -45,11 +45,13 @@
           </div>
         </div>
       </ion-item>
-      <div ng-hide="item.itemRequest == 'None'">
+      <div ng-hide="chkItemRequest == 'None'">
         <ion-item class="item-divider">
           Item Request
         </ion-item>
-        <ion-checkbox ng-disabled="item.itemQty==0 || item.itemStatus=='Unavailable'" class="item-checkbox-right checkbox-royal" value="item.itemRequest" ng-model="request.item">{{ item.itemRequest }}</ion-checkbox>
+        <ion-checkbox ng-repeat="itemRequest in itemRequests" ng-disabled="item.itemQty==0 || item.itemStatus=='Unavailable'" class="item-checkbox-right checkbox-royal" ng-change="changeItem(itemRequest)" ng-model="itemRequest.checked" ng-checked="itemRequest.checked">
+          {{ itemRequest.text }}
+        </ion-checkbox>
       </div>
 
     </ion-list>
