@@ -294,7 +294,7 @@ app.factory('CafeInfo', function($http, APIurl, $q, Connection, LatestUpdate, In
   };
 });
 
-app.factory('Cart', function($http, moment, APIurl, $q) {
+app.factory('Cart', function($http, moment, APIurl, $q, Promotions) {
   var cartObject = {
     discount: 0.0,
     GST: 0.0,
@@ -331,50 +331,23 @@ app.factory('Cart', function($http, moment, APIurl, $q) {
     cart.comboMessage = [];
   }
 
-  function checkComboStatus() {
-    var url = APIurl + "WebserviceCafe.asmx/retrieveCombo";
-    return $http({
-      method: 'GET',
-      url: url,
-      params: {
-        token: localStorage.getItem("accessToken")
-      }
-    }).then(function successCallback(response) {
-      return response.data;
-    }, function errorCallback(response) {
-      return response.data;
-    });
-  }
-
   function checkTime() {
     var d = moment();
     var afterTime = moment().hour(09).minutes(30).seconds(0);
-    var beforeTime = moment().hour(21).minutes(30).seconds(0);
+    var beforeTime = moment().hour(22).minutes(30).seconds(0);
     return moment(d).isBetween(afterTime, beforeTime);
   }
 
-  function checkCombo3(array) {
-    var valuesSoFar = Object.create(null);
-    for (var i = 0; i < array.length; ++i) {
-      var value = array[i];
-      if (value in valuesSoFar) {
-        return true;
-      }
-      valuesSoFar[value] = true;
-    }
-    return false;
-  }
-
-  function combo1n2n3(combo1, combo2, combo3) {
-
+  function calculateCombo1n2DiscountAndQty(combo1, combo2, combo1HotDrinkDiscount, combo1ColdDrinkDiscount, combo2IceBlendedDiscount) {
     var longblackIce = 0;
     var longblackHot = 0;
     var iceTea = 0;
     var hotTea = 0;
     var iceBlended = 0;
     var food = 0;
-    var drinks = 0;
     var discount = 0;
+    var comboMsgArr = [];
+    var obj = {};
 
     // categorize them accordingly and get their quantity
     for (var i = 0; i < cart.items.length; i++) {
@@ -401,8 +374,55 @@ app.factory('Cart', function($http, moment, APIurl, $q) {
       }
     }
 
-    // calculate combo 3 first
-    if (combo3 && checkTime()) { // after 5.30
+    if (food > 0 && (longblackIce + longblackHot + iceTea + hotTea + iceBlended) > 0) {
+      var hotDrinks = hotTea + longblackHot;
+      var coldDrinks = iceTea + longblackIce;
+      var iceBlendedDrinks = iceBlended;
+
+      for (var i = 0; i < food; i++) {
+        // Priority 1
+        if (iceBlendedDrinks > 0 && combo2) {
+          --iceBlendedDrinks;
+          comboMsgArr.push("combo2");
+          discount += 1.00;
+        }
+        // Priority 2
+        else if (coldDrinks > 0 && combo1) {
+          --coldDrinks;
+          comboMsgArr.push("combo1");
+          discount += 1.00;
+        }
+        // Priority 3
+        else if (hotDrinks > 0 && combo1) {
+          --hotDrinks;
+          comboMsgArr.push("combo1");
+          discount += 0.80;
+        }
+      }
+    }
+
+    // put discount to object
+    obj.discount = discount;
+
+    // convert from array to objects
+    obj.comboMessage = comboMsgArr.reduce(function(prev, item) {
+      if (item in prev)
+        prev[item]++;
+      else
+        prev[item] = 1;
+
+      return prev;
+    }, {});
+
+    return obj;
+  }
+
+  function calculateCombo3DiscountAndQty(combo3, withinTime) {
+    var discount = 0.0;
+    var comboMsgArr = [];
+    var obj = {};
+
+    if (combo3 && withinTime) { // within time
       var discountItems = [];
       var combo3Arr = [];
       var combo3Objects = {};
@@ -446,114 +466,20 @@ app.factory('Cart', function($http, moment, APIurl, $q) {
             var itemPrice = cart.items[i].itemPrice;
             if (key == itemName) {
               for (var j = 0; j < discountQty; j++) {
-                discountItems.push(itemPrice);
+                discount += itemPrice;
+                comboMsgArr.push("combo3");
               }
             }
           }
         }
       }
-
-      for (var i = 0; i < discountItems.length; i++) {
-        discount += discountItems[i];
-      }
-
-      food -= discountItems.length;
     }
 
-    // calculate combo 1n2 next
-    drinks = longblackIce + longblackHot + iceTea + hotTea + iceBlended;
-    if (food > 0 && drinks > 0) {
-      if (combo1 && combo2) { // combo 1,2 are active
-        var totalNumDrinks = longblackIce + longblackHot + iceTea + hotTea + iceBlended;
-        var hotDrinks = hotTea + longblackHot;
-        var coldDrinks = iceTea + longblackIce + iceBlended;
-        if (food >= totalNumDrinks) {
-          discount += (hotDrinks * 0.80) + (coldDrinks * 1.00);
-        } else if (food < totalNumDrinks) {
-          var coldDrinkDiscount = 0.0;
-          var hotDrinkDiscount = 0.0;
-          if (coldDrinks > 0) {
-            if (coldDrinks >= food) {
-              coldDrinkDiscount = food * 1.00;
-              food -= food;
-            } else {
-              coldDrinkDiscount = coldDrinks * 1.00;
-              food -= coldDrinks;
-            }
-            hotDrinkDiscount = food * 0.80;
-            discount += hotDrinkDiscount + coldDrinkDiscount;
-          } else {
-            discount += food * 0.80;
-          }
-        }
-      } else if (combo1 && !combo2) { // only combo 1 is active
-        var totalNumDrinks = longblackIce + longblackHot + iceTea + hotTea;
-        var hotDrinks = hotTea + longblackHot;
-        var coldDrinks = iceTea + longblackIce;
-        if (food >= totalNumDrinks) {
-          discount += (hotDrinks * 0.80) + (coldDrinks * 1.00);
-        } else if (food < totalNumDrinks) {
-          var coldDrinkDiscount = 0.0;
-          var hotDrinkDiscount = 0.0;
-          if (hotDrinks > 0) {
-            if (coldDrinks > food) {
-              coldDrinkDiscount = food * 1.00;
-              food -= food;
-            } else {
-              coldDrinkDiscount = coldDrinks * 1.00;
-              totalNum -= coldDrinks;
-            }
-            hotDrinkDiscount = food * 0.80;
-            discount += hotDrinkDiscount + coldDrinkDiscount;
-          } else {
-            discount += food * 0.80;
-          }
-        }
-      } else if (!combo1 && combo2) { // only combo2 is active
-        var totalNumDrinks = iceBlended;
-        if (food >= totalNumDrinks) {
-          discount += totalNumDrinks * 1.00;
-        } else if (food < totalNumDrinks) {
-          discount += food * 1.00;
-        }
-      }
-    }
-    return discount;
-  }
+    // put discount to object
+    obj.discount = discount;
 
-  function displayDiscount(combo1, combo2, combo3) {
-
-    var food = 0
-    var combolist = [];
-    var combo1Items = 0;
-    var combo2Items = 0;
-    var combo3Arr = [];
-    var freeFood = 0;
-    var combo3Objects = {};
-    var hasCombo3 = false;
-
-    for (var i = 0; i < cart.items.length; i++) {
-      var quantity = cart.items[i].quantity;
-      var combo = cart.items[i].combo;
-      var itemName = cart.items[i].itemName;
-      var itemCategory = cart.items[i].itemCategory;
-      if (combo == 1) {
-        combo1Items += quantity;
-      } else if (combo == 2) {
-        combo2Items += quantity;
-      } else if (combo == 3 || itemCategory == "Food") {
-        food += quantity;
-        if (combo == 3 && checkTime()) {
-          for (var j = 0; j < quantity; j++) {
-            combo3Arr.push(itemName);
-          }
-        }
-      }
-
-    }
-
-    // convert and categorize items from array to objects
-    combo3Objects = combo3Arr.reduce(function(prev, item) {
+    // convert from array to objects
+    obj.comboMessage = comboMsgArr.reduce(function(prev, item) {
       if (item in prev)
         prev[item]++;
       else
@@ -562,71 +488,7 @@ app.factory('Cart', function($http, moment, APIurl, $q) {
       return prev;
     }, {});
 
-    // 1) identify discount quantity for respective items (buy 1 get 1 free logic)
-    // 2) calculate the number of free food
-    for (var key in combo3Objects) {
-      if (combo3Objects.hasOwnProperty(key)) {
-        var qty = combo3Objects[key];
-        freeFood += Math.floor(qty / 2);
-      }
-    }
-
-    hasCombo3 = checkCombo3(combo3Arr);
-
-    if (combo1 && !combo2 && !combo3) { // only combo 1 is active
-      if (combo1Items > 0 && food > 0) {
-        combolist.push("Combo 1");
-      }
-    } else if (!combo1 && combo2 && !combo3) { // only combo 2 is active
-      if (combo2Items > 0 && food > 0) {
-        combolist.push("Combo 2");
-      }
-    } else if (!combo1 && !combo2 && combo3) { // only combo 3 is active
-      if (hasCombo3) {
-        combolist.push("1 FOR 1");
-      }
-    } else if (combo1 && combo2 && !combo3) { // Combo 1,2 are active
-      if (combo1Items > 0 && food > 0 && combo2Items > 0) {
-        combolist.push("Combo 2");
-        if (food > combo2Items) {
-          combolist.push("Combo 1");
-        }
-      } else if (combo1Items == 0 && food > 0 && combo2Items > 0) {
-        combolist.push("Combo 2");
-      } else if (combo1Items > 0 && food > 0 && combo2Items == 0) {
-        combolist.push("Combo 1");
-      }
-    } else if (combo1 && !combo2 && combo3) { // cobo 1,3 are active
-      if (hasCombo3) {
-        combolist.push("1 FOR 1");
-      }
-      if (combo1Items > 0 && food > 0) {
-        combolist.push("Combo 1");
-      }
-    } else if (!combo1 && combo2 && combo3) { // combo 2,3 are active
-      if (hasCombo3) {
-        combolist.push("1 FOR 1");
-      }
-      if (combo2Items > 0 && food > 0) {
-        combolist.push("Combo 2");
-      }
-    } else if (combo1 && combo2 && combo3) { // combo 1,2,3 are active
-      if (hasCombo3) {
-        combolist.push("1 FOR 1");
-      }
-      if (combo1Items > 0 && food > 0 && combo2Items > 0) {
-        combolist.push("Combo 2");
-        food -= freeFood;
-        if (food > combo2Items) {
-          combolist.push("Combo 1");
-        }
-      } else if (combo1Items == 0 && food > 0 && combo2Items > 0) {
-        combolist.push("Combo 2");
-      } else if (combo1Items > 0 && food > 0 && combo2Items == 0) {
-        combolist.push("Combo 1");
-      }
-    }
-    return combolist;
+    return obj;
   }
 
   function calculateTotalCost() {
@@ -636,63 +498,66 @@ app.factory('Cart', function($http, moment, APIurl, $q) {
       for (var i = 0; i < cart.items.length; i++) {
         total += cart.items[i].itemPrice * cart.items[i].quantity;
       }
-      cart.netTotal = parseFloat(total).toFixed(2);
+      cart.netTotal = parseFloat(total - (total * 0.07)).toFixed(2);
       persist();
       deferred.resolve('===========================================Total is done: ' + cart.netTotal);
     }
     return deferred.promise;
   }
 
-  function getDiscountAndComboMessage() {
+  function calculateDiscount() {
     var deferred = $q.defer();
-    var discount = 0.0;
-    var comboMessage = [];
-    checkComboStatus().then(function(res) {
-      console.log(res);
-      if (res[0] & !res[1] & !res[2]) {
-        discount = combo1n2n3(true, false, false);
-        comboMessage = displayDiscount(true, false, false);
-        console.log("only combo 1 is active ");
-      } else if (!res[0] & res[1] & !res[2]) {
-        discount = combo1n2n3(false, true, false);
-        comboMessage = displayDiscount(false, true, false);
-        console.log("only combo 2 is active");
-      } else if (!res[0] & !res[1] & res[2]) {
-        discount = combo1n2n3(false, false, true);
-        comboMessage = displayDiscount(false, false, true);
-        console.log("only combo 3 is active");
-      } else if (res[0] & res[1] & !res[2]) {
-        discount = combo1n2n3(true, true, false);
-        comboMessage = displayDiscount(true, true, false);
-        console.log("combo 1,2 are active");
-      } else if (!res[0] & res[1] & res[2]) {
-        discount = combo1n2n3(false, true, true);
-        comboMessage = displayDiscount(false, true, true);
-        console.log("combo 2,3 are active only");
-      } else if (res[0] & !res[1] & res[2]) {
-        discount = combo1n2n3(true, false, true);
-        comboMessage = displayDiscount(true, false, true);
-        console.log("combo 1,3 are active only");
-      } else if (res[0] & res[1] & res[2]) {
-        discount = combo1n2n3(true, true, true);
-        comboMessage = displayDiscount(true, true, true);
-        console.log("all combo are active");
-      } else {
-        console.log('no promos are active');
-      }
-      cart.discount = parseFloat(discount).toFixed(2);
-      cart.comboMessage = comboMessage;
-      persist();
-      deferred.resolve('===========================================Discount is done :' + cart.discount);
+    var combo1 = false;
+    var combo2 = false;
+    var combo3 = false;
+    var combo1HotDrinkDiscount = 0.0;
+    var combo1ColdDrinkDiscount = 0.0;
+    var combo2IceBlendedDiscount = 0.0;
+    var choiceA = {};
+    var choiceB = {};
+    Promotions.checkComboStatus().then(function(comboStatusRes) {
+      combo1 = comboStatusRes[0];
+      combo2 = comboStatusRes[1];
+      combo3 = comboStatusRes[2];
+      Promotions.getAllCombo().then(function(allComboRes) {
+        for (var i = 0; i < allComboRes.length; i++) {
+          if (allComboRes.comboType == "combo1" && combo1 == true) {
+            combo1HotDrinkDiscount = allComboRes.discountHot;
+            combo1ColdDrinkDiscount = allComboRes.discountCold;
+          } else if (allComboRes.comboType == "combo2" && combo2 == true) {
+            combo2IceBlendedDiscount = allComboRes.discountCold;
+          }
+        }
+
+        // Calculate Combo1n2 discount
+        var choiceA = calculateCombo1n2DiscountAndQty(combo1, combo2, combo1HotDrinkDiscount, combo1ColdDrinkDiscount, combo2IceBlendedDiscount);
+        console.log(choiceA);
+        // Calculate Combo3 discount
+        var choiceB = calculateCombo3DiscountAndQty(combo3, checkTime());
+        console.log(choiceB);
+        // Decision Maker --> combo1n2 or combo3?
+        if (choiceA.discount >= choiceB.discount) {
+          console.log("Take Choice A");
+          cart.discount = parseFloat(choiceA.discount).toFixed(2);
+          cart.comboMessage = choiceA.comboMessage;
+        } else if (choiceA.discount < choiceB.discount) {
+          console.log("Take Choice B");
+          cart.discount = parseFloat(choiceB.discount).toFixed(2);
+          cart.comboMessage = choiceB.comboMessage;
+        }
+
+        persist();
+        deferred.resolve('===========================================Discount is done :' + cart.discount);
+      });
     });
+
     return deferred.promise;
   }
 
   function calculateGST() {
     var deferred = $q.defer();
     if (cart.netTotal != 0.0) {
-      var gst = (cart.netTotal - cart.discount) * 0.07;
-      cart.GST = parseFloat(gst).toFixed(2);
+      cart.GST = parseFloat((cart.netTotal / 0.93) * 0.07).toFixed(2);
       persist();
       deferred.resolve('===========================================GST is done: ' + cart.GST);
     }
@@ -702,7 +567,8 @@ app.factory('Cart', function($http, moment, APIurl, $q) {
   function calculateGrandTotal() {
     var deferred = $q.defer();
     if (cart.netTotal != 0) {
-      var total = parseFloat(cart.netTotal - cart.discount);
+      console.log(cart.GST);
+      var total = (parseFloat(cart.netTotal) + parseFloat(cart.GST)) - parseFloat(cart.discount);
       cart.total = parseFloat(total).toFixed(2);
       persist();
       deferred.resolve('===========================================Grand is done: ' + cart.total);
@@ -714,10 +580,10 @@ app.factory('Cart', function($http, moment, APIurl, $q) {
     if (cart.items.length > 0) {
       calculateTotalCost().then(function(res1) {
         console.log(res1);
-        return getDiscountAndComboMessage();
+        return calculateGST()
       }).then(function(res2) {
         console.log(res2);
-        return calculateGST();
+        return calculateDiscount();;
       }).then(function(res3) {
         console.log(res3);
         return calculateGrandTotal();
@@ -854,13 +720,27 @@ app.factory('Promotions', function($http, APIurl) {
         return response.data;
       });
     },
-    getCombo: function() {
-      var url = APIurl + "WebserviceCafe.asmx/retrieveCombos?";
+    getAllCombo: function() {
+      var url = APIurl + "WebserviceCafe.asmx/retrieveAllCombo?";
       return $http({
         method: 'GET',
         url: url + "token=" + localStorage.getItem("accessToken"),
         dataType: "json",
         contentType: "application/json; charset=utf-8"
+      }).then(function successCallback(response) {
+        return response.data;
+      }, function errorCallback(response) {
+        return response.data;
+      });
+    },
+    checkComboStatus: function() {
+      var url = APIurl + "WebserviceCafe.asmx/retrieveComboStatus";
+      return $http({
+        method: 'GET',
+        url: url,
+        params: {
+          token: localStorage.getItem("accessToken")
+        }
       }).then(function successCallback(response) {
         return response.data;
       }, function errorCallback(response) {

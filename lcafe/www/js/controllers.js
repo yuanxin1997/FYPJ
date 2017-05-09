@@ -968,11 +968,11 @@ angular.module('starter.controllers', [])
         $scope.list = [];
         for (var i = 0; i < res.length; i++) {
           console.log(res[i]);
-          if (res[i].status == 1 && res[i].comboType == "combo1" && msg == "Combo 1") {
+          if (res[i].status == 1 && res[i].comboType == "combo1" && msg == "combo1") {
             $scope.list.push(res[i]);
-          } else if (res[i].status == 1 && res[i].comboType == "combo2" && msg == "Combo 2") {
+          } else if (res[i].status == 1 && res[i].comboType == "combo2" && msg == "combo2") {
             $scope.list.push(res[i]);
-          } else if (res[i].status == 1 && res[i].comboType == "combo3" && msg == "1 FOR 1") {
+          } else if (res[i].status == 1 && res[i].comboType == "combo3" && msg == "combo3") {
             $scope.list.push(res[i]);
           }
         }
@@ -1020,7 +1020,7 @@ angular.module('starter.controllers', [])
     // Promotions.emailTest().then(function(res) {
     //   console.log(res);
     // });
-    Promotions.getCombo().then(function(res) {
+    Promotions.getAllCombo().then(function(res) {
       console.log(res);
     })
     $scope.hasPromo = function(length) {
