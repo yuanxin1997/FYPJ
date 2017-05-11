@@ -10079,7 +10079,7 @@ a {
     font-size: 1em;
     background: rgba(0, 0, 0, 0.7); }
 
-.ribbon {
+.ribbonRed {
   position: absolute;
   left: -5px;
   top: -5px;
@@ -10089,7 +10089,57 @@ a {
   height: 100%;
   text-align: right; }
 
-.ribbon span {
+.ribbonRed span {
+  font-size: 15px;
+  font-weight: bold;
+  color: #FFF;
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 25px;
+  transform: rotate(-45deg);
+  -webkit-transform: rotate(-45deg);
+  width: 150px;
+  display: block;
+  background: #8F0808;
+  background: linear-gradient(#F70505 0%, #8F0808 100%);
+  box-shadow: 0 3px 10px -5px black;
+  position: absolute;
+  top: 22px;
+  left: -38px; }
+
+.ribbonRed span::before {
+  content: "";
+  position: absolute;
+  left: 0px;
+  top: 100%;
+  z-index: -1;
+  border-left: 3px solid #8F0808;
+  border-right: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+  border-top: 3px solid #8F0808; }
+
+.ribbonRed span::after {
+  content: "";
+  position: absolute;
+  right: 0px;
+  top: 100%;
+  z-index: -1;
+  border-left: 3px solid transparent;
+  border-right: 3px solid #8F0808;
+  border-bottom: 3px solid transparent;
+  border-top: 3px solid #8F0808; }
+
+.ribbonGreen {
+  position: absolute;
+  left: -5px;
+  top: -5px;
+  z-index: 1;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  text-align: right; }
+
+.ribbonGreen span {
   font-size: 15px;
   font-weight: bold;
   color: #FFF;
@@ -10101,33 +10151,33 @@ a {
   width: 150px;
   display: block;
   background: #79A70A;
-  background: linear-gradient(#F70505 0%, #8F0808 100%);
+  background: linear-gradient(#9BC90D 0%, #79A70A 100%);
   box-shadow: 0 3px 10px -5px black;
   position: absolute;
   top: 22px;
   left: -38px; }
 
-.ribbon span::before {
+.ribbonGreen span::before {
   content: "";
   position: absolute;
   left: 0px;
   top: 100%;
   z-index: -1;
-  border-left: 3px solid #8F0808;
+  border-left: 3px solid #79A70A;
   border-right: 3px solid transparent;
   border-bottom: 3px solid transparent;
-  border-top: 3px solid #8F0808; }
+  border-top: 3px solid #79A70A; }
 
-.ribbon span::after {
+.ribbonGreen span::after {
   content: "";
   position: absolute;
   right: 0px;
   top: 100%;
   z-index: -1;
   border-left: 3px solid transparent;
-  border-right: 3px solid #8F0808;
+  border-right: 3px solid #79A70A;
   border-bottom: 3px solid transparent;
-  border-top: 3px solid #8F0808; }
+  border-top: 3px solid #79A70A; }
 
 .row .col img {
   width: 50%;
@@ -10138,7 +10188,8 @@ a {
   margin: auto;
   width: 100%;
   border: 3px solid #DAA520;
-  padding: 10px; }
+  padding: 10px;
+  font-size: 2.0em; }
 
 .row .col .middleText {
   text-align: center;
@@ -10151,7 +10202,7 @@ a {
   text-align: center; }
 
 .row .col .pFont0 {
-  font-size: 2.0em;
+  font-size: 1.6em;
   color: grey;
   font-family: 'Arvo', serif; }
 
@@ -10161,7 +10212,8 @@ a {
   color: grey; }
 
 .row .col .pFont2 {
-  font-weight: 700; }
+  font-weight: 700;
+  font-size: 1.4em; }
 
 .taFont0 {
   width: 100%; }
@@ -10222,7 +10274,8 @@ a {
   border-bottom: rgba(0, 0, 0, 0.3) solid 2px; }
 
 .comboMsgColor {
-  color: #387ef5; }
+  color: #387ef5;
+  margin-right: 0.5em; }
 
 .comboMsg {
   margin-left: 0.5em;
@@ -10453,6 +10506,8 @@ ul.rating li i {
   border: none; }
   .list .bottomPortion .iFont0 {
     color: darkgrey; }
+    .list .bottomPortion .iFont0 .iFont0-0 {
+      margin-right: 0.5em; }
   .list .bottomPortion .iFont1 {
     color: darkgrey; }
   .list .bottomPortion .iFont2 {
@@ -10528,6 +10583,22 @@ ul.rating li i {
 .list .item .hFont2 {
   font-size: 1.1em;
   font-weight: bold; }
+
+.list .item .hFont3 {
+  position: absolute;
+  font-size: 1.0em;
+  font-weight: 900;
+  top: 1em;
+  right: 0;
+  width: 5em; }
+
+.list .item .orangeStatus {
+  color: #ed9121;
+  font-weight: 500; }
+
+.list .item .greenStatus {
+  color: #169350;
+  font-weight: 500; }
 
 .padding .wImg {
   width: 50%;

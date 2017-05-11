@@ -338,6 +338,19 @@ app.factory('Cart', function($http, moment, APIurl, $q, Promotions) {
     return moment(d).isBetween(afterTime, beforeTime);
   }
 
+  function convertToArray(object) {
+    var arr = [];
+    for (var key in object) {
+      if (object.hasOwnProperty(key)) {
+        obj = {};
+        obj.comboType = key;
+        obj.comboQty = object[key];
+        arr.push(obj);
+      }
+    }
+    return arr;
+  }
+
   function calculateCombo1n2DiscountAndQty(combo1, combo2, combo1HotDrinkDiscount, combo1ColdDrinkDiscount, combo2IceBlendedDiscount) {
     var longblackIce = 0;
     var longblackHot = 0;
@@ -491,20 +504,6 @@ app.factory('Cart', function($http, moment, APIurl, $q, Promotions) {
     return obj;
   }
 
-  function calculateTotalCost() {
-    var deferred = $q.defer();
-    if (cart.items.length > 0) {
-      var total = 0.0;
-      for (var i = 0; i < cart.items.length; i++) {
-        total += cart.items[i].itemPrice * cart.items[i].quantity;
-      }
-      cart.netTotal = parseFloat(total - (total * 0.07)).toFixed(2);
-      persist();
-      deferred.resolve('===========================================Total is done: ' + cart.netTotal);
-    }
-    return deferred.promise;
-  }
-
   function calculateDiscount() {
     var deferred = $q.defer();
     var combo1 = false;
@@ -539,11 +538,11 @@ app.factory('Cart', function($http, moment, APIurl, $q, Promotions) {
         if (choiceA.discount >= choiceB.discount) {
           console.log("Take Choice A");
           cart.discount = parseFloat(choiceA.discount).toFixed(2);
-          cart.comboMessage = choiceA.comboMessage;
+          cart.comboMessage = convertToArray(choiceA.comboMessage);
         } else if (choiceA.discount < choiceB.discount) {
           console.log("Take Choice B");
           cart.discount = parseFloat(choiceB.discount).toFixed(2);
-          cart.comboMessage = choiceB.comboMessage;
+          cart.comboMessage = convertToArray(choiceB.comboMessage);
         }
 
         persist();
@@ -551,6 +550,21 @@ app.factory('Cart', function($http, moment, APIurl, $q, Promotions) {
       });
     });
 
+    return deferred.promise;
+  }
+
+  function calculateNetTotal() {
+    var deferred = $q.defer();
+    if (cart.items.length > 0) {
+      var total = 0.0;
+      for (var i = 0; i < cart.items.length; i++) {
+        total += cart.items[i].itemPrice * cart.items[i].quantity;
+      }
+      var afterDiscount = parseFloat(total) - parseFloat(cart.discount);
+      cart.netTotal = parseFloat(afterDiscount - (afterDiscount * 0.07)).toFixed(2);
+      persist();
+      deferred.resolve('===========================================Total is done: ' + cart.netTotal);
+    }
     return deferred.promise;
   }
 
@@ -564,11 +578,10 @@ app.factory('Cart', function($http, moment, APIurl, $q, Promotions) {
     return deferred.promise;
   }
 
-  function calculateGrandTotal() {
+  function calculateTotal() {
     var deferred = $q.defer();
     if (cart.netTotal != 0) {
-      console.log(cart.GST);
-      var total = (parseFloat(cart.netTotal) + parseFloat(cart.GST)) - parseFloat(cart.discount);
+      var total = parseFloat(cart.netTotal) + parseFloat(cart.GST);
       cart.total = parseFloat(total).toFixed(2);
       persist();
       deferred.resolve('===========================================Grand is done: ' + cart.total);
@@ -576,17 +589,17 @@ app.factory('Cart', function($http, moment, APIurl, $q, Promotions) {
     return deferred.promise;
   }
 
-  function calculatePrice() {
+  function performCalculation() {
     if (cart.items.length > 0) {
-      calculateTotalCost().then(function(res1) {
+      calculateDiscount().then(function(res1) {
         console.log(res1);
-        return calculateGST()
+        return calculateNetTotal()
       }).then(function(res2) {
         console.log(res2);
-        return calculateDiscount();;
+        return calculateGST();;
       }).then(function(res3) {
         console.log(res3);
-        return calculateGrandTotal();
+        return calculateTotal();
       }).then(function(res4) {
         console.log(res4);
       });
@@ -597,7 +610,7 @@ app.factory('Cart', function($http, moment, APIurl, $q, Promotions) {
 
   return {
     get: function() {
-      calculatePrice();
+      performCalculation();
       return cart;
     },
     create: function(c) {
@@ -617,14 +630,14 @@ app.factory('Cart', function($http, moment, APIurl, $q, Promotions) {
     },
     add: function(item) {
       cart.items.push(item);
-      calculatePrice();
+      performCalculation();
       persist();
     },
     remove: function(itemID) {
       for (var i = 0; i < cart.items.length; i++) {
         if (cart.items[i].itemID === itemID) {
           cart.items.splice(i, 1);
-          calculatePrice();
+          performCalculation();
           persist();
           return;
         }

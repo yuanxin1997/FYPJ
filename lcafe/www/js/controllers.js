@@ -542,6 +542,14 @@ angular.module('starter.controllers', [])
       console.log(checked);
     };
 
+    $scope.checkLabel = function(label) {
+      if (label == "Special") {
+        return "ribbonRed";
+      } else if (label == "New") {
+        return "ribbonGreen";
+      }
+    }
+
     // =========================================================================Sorting Modal=========================================================================
 
     $scope.openSortModal = function() {
@@ -629,7 +637,6 @@ angular.module('starter.controllers', [])
     $scope.dataSend = {};
     $scope.item = {};
     $scope.input = {};
-    $scope.doNotAskAgain = false;
 
     function checkFav(id) {
       var FavItems = localStorage.getItem("favouriteItemsID").split(',');
@@ -645,7 +652,7 @@ angular.module('starter.controllers', [])
 
     function showDuplicateAlert() {
       $ionicPopup.alert({
-        title: 'Error',
+        title: 'Duplicate Items',
         template: '<p class="dark">You have already added this item.</b>',
         buttons: [{
           text: 'Ok',
@@ -670,7 +677,6 @@ angular.module('starter.controllers', [])
           $scope.input.separatePackaging = "Yes";
         } else {
           $scope.input.separatePackaging = "No";
-          $scope.doNotAskAgain = true;
         }
       });
     }
@@ -710,7 +716,7 @@ angular.module('starter.controllers', [])
       }
     }).then(function(response) {
       $scope.input.quantity = quantitySelected;
-      $scope.input.separatePackaging = "No";
+      $scope.input.separatePackaging = "";
     });
 
     $scope.changeItem = function(item) {
@@ -736,7 +742,7 @@ angular.module('starter.controllers', [])
       console.log("+");
       quantitySelected++;
       $scope.input.quantity = quantitySelected;
-      if ($scope.input.separatePackaging != "Yes" && !$scope.doNotAskAgain) {
+      if ($scope.input.separatePackaging == "") {
         showSeparatePackaging();
       }
     };
@@ -744,8 +750,7 @@ angular.module('starter.controllers', [])
     $scope.minusQty = function(item) {
       console.log("-");
       if ($scope.input.quantity == 2) {
-        $scope.input.separatePackaging = "No";
-        $scope.doNotAskAgain = false;
+        $scope.input.separatePackaging = "";
       }
       if ($scope.input.quantity > 1) {
         quantitySelected--;
@@ -755,7 +760,7 @@ angular.module('starter.controllers', [])
 
     $scope.addCart = function() {
       itemToCart.quantity = $scope.input.quantity;
-      itemToCart.separatePackaging = $scope.input.separatePackaging
+      itemToCart.separatePackaging = $scope.input.separatePackaging;
       if (checked[0] != undefined) {
         itemToCart.itemRequest = checked[0];
       } else {
@@ -853,7 +858,6 @@ angular.module('starter.controllers', [])
 
     var contentBannerInstance;
     $scope.cart = Cart.get();
-    $scope.doNotAskAgain = false;
 
     function popupOrdTypePrompt() {
       $ionicPopup.show({
@@ -893,7 +897,6 @@ angular.module('starter.controllers', [])
           Cart.get();
         } else {
           item.separatePackaging = "No"
-          $scope.doNotAskAgain = true;
           Cart.get()
         }
       });
@@ -928,7 +931,7 @@ angular.module('starter.controllers', [])
 
     $scope.plusQty = function(item) {
       item.quantity++;
-      if (item.separatePackaging != "Yes" && !$scope.doNotAskAgain) {
+      if (item.separatePackaging == "") {
         showSeparatePackaging(item);
       }
       Cart.get();
@@ -937,8 +940,7 @@ angular.module('starter.controllers', [])
     $scope.minusQty = function(item) {
       if (item.quantity == 2) {
         showBanner('info', 'vertical');
-        item.separatePackaging = "No";
-        $scope.doNotAskAgain = false;
+        item.separatePackaging = "";
         Cart.get();
       }
       if (item.quantity > 1) {
@@ -1208,6 +1210,14 @@ angular.module('starter.controllers', [])
       }
     });
 
+    $scope.checkStatus = function(status) {
+      if (status == "Delivered" || status == "Collected") {
+        return "greenStatus";
+      } else {
+        return "orangeStatus";
+      }
+    }
+
   })
 
   .controller('ordDetailsCtrl', function($scope, $state, $stateParams, $ionicSideMenuDelegate, MyHistory, $ionicModal) {
@@ -1217,19 +1227,19 @@ angular.module('starter.controllers', [])
     $scope.items = [];
     $scope.qrCodePin = "";
 
-
     MyHistory.getOrderItems(id).then(function(res) {
       console.log(res);
       $scope.ordTotal = parseFloat(res[0].total).toFixed(2);
       $scope.ordDiscount = parseFloat(res[0].discount).toFixed(2);
       $scope.ordGST = parseFloat(res[0].GST).toFixed(2);
-      $scope.ordNetTotal = parseFloat(res[0].total + res[0].discount).toFixed(2);
+      $scope.ordNetTotal = parseFloat(res[0].netTotal).toFixed(2);
       $scope.orderType = res[0].orderType;
       $scope.preorderDateTime = moment(res[0].preorderDateTime).format('DD-MMM-YYYY h:mm:ss A');
       $scope.tableNumber = res[0].tableNumber;
       $scope.orderDateTime = moment(res[0].orderDateTime).format('DD-MMM-YYYY h:mm:ss A');
       $scope.transNo = res[0].transNo;
       $scope.PIN = res[0].PIN.toString();
+      $scope.comboMessage = res[0].comboMessage;
 
       for (var i = 0; i < res.length; i++) {
         res[i].itemPrice = parseFloat(res[i].itemPrice).toFixed(2);
@@ -1850,10 +1860,14 @@ angular.module('starter.controllers', [])
               // check between time
               var selectedDate = new Date(selectedDT);
               var date = new Date();
-              var datestring = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " +
+              var datestringA = date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " +
                 selectedDate.getHours() + ":" + selectedDate.getMinutes();
-              var formatDate = new Date(datestring);
-              var d = moment(formatDate);
+              var datestringB = date.getFullYear() + "-" + (selectedDate.getMonth() + 1) + "-" + selectedDate.getDate() + " " +
+                selectedDate.getHours() + ":" + selectedDate.getMinutes();
+              var formatDateA = new Date(datestringA);
+              var formatDateB = new Date(datestringB);
+              var d = moment(formatDateA);
+              var c = moment(formatDateB);
               var afterTime = moment().hour(hrOpen).minutes(minOpen);
               var beforeTime = moment().hour(hrClose).minutes(minClose);
 
@@ -1864,11 +1878,11 @@ angular.module('starter.controllers', [])
               console.log("Is within 15 minutes before closing: " + moment(d).isBetween(fifteenMinutesFromNow, beforeTime));
 
               var now = moment();
-              console.log("Time has passed: " + moment(d).isBefore(now));
+              console.log("Time has passed: " + moment(c).isBefore(now));
 
               console.log("Is between time: " + moment(d).isBetween(afterTime, beforeTime));
               if (moment(d).isBetween(afterTime, beforeTime)) {
-                if (moment(d).isBefore(now)) {
+                if (moment(c).isBefore(now)) {
                   $scope.status = "BeforeNow";
                 } else {
                   if (moment(d).isBetween(fifteenMinutesFromNow, beforeTime)) {

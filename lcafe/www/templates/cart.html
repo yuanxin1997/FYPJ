@@ -28,6 +28,12 @@
       <ion-item class="card" id="cart-bottom-card" ng-show="!cartEmpty()">
         <span class="list">
 
+          <span class="item" ng-if="cart.discount > 0">
+            Discount:
+              <span class="pull-right">${{cart.discount}}</span>
+              <h1 class="comboMsg" ng-repeat="comboMsg in cart.comboMessage" ng-click="openModal(comboMsg.comboType)">- <span class="comboMsgColor">{{comboMsg.comboType === 'combo3' ? '1 FOR 1' : comboMsg.comboType}}</span> x {{comboMsg.comboQty}}</h1>
+          </span>
+
           <span class="item">
             Net Total:
               <span class="pull-right">${{cart.netTotal}}</span>
@@ -36,14 +42,6 @@
           <span class="item">
             GST:
               <span class="pull-right">${{cart.GST}}</span>
-          </span>
-
-          <span class="item" ng-if="cart.discount > 0">
-            Discount:
-              <span class="pull-right">${{cart.discount}}</span>
-              <h1 class="comboMsg" ng-if="cart.comboMessage.combo1 != undefined" ng-click="openModal('combo1')">- <span class="comboMsgColor">combo1</span> x {{cart.comboMessage.combo1}}</h1>
-              <h1 class="comboMsg" ng-if="cart.comboMessage.combo2 != undefined" ng-click="openModal('combo2')">- <span class="comboMsgColor">combo2</span> x {{cart.comboMessage.combo2}}</h1>
-              <h1 class="comboMsg" ng-if="cart.comboMessage.combo3 != undefined" ng-click="openModal('combo3')">- <span class="comboMsgColor">combo3</span> x {{cart.comboMessage.combo3}}</h1>
           </span>
 
           <span class="item">

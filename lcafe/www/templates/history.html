@@ -8,7 +8,10 @@
         <img ng-if="order.orderType == 'Pre-Order'" ng-src="img/Preorder.jpg" />
         <p class="hFont0"><b>Trans No: {{ order.transNo }}</b></p>
         <p class="pull-left hFont1"><b><span am-time-Ago="order.orderDateTime"></span></b></p>
-        <p class="ordAmt pull-right hFont2">${{ order.total | number : 2}}</p>
+        <div class="hFont3" >
+          <p ng-class="checkStatus(order.status)">{{ order.status }}</p>
+          <p class="">${{ order.total | number : 2}}</p>
+        </div>
       </ion-item>
 
     </ion-list>

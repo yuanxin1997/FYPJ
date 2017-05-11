@@ -191,7 +191,7 @@ a {
   }
 }
 
-.ribbon {
+.ribbonRed {
   position: absolute;
   left: -5px; top: -5px;
   z-index: 1;
@@ -200,7 +200,54 @@ a {
   text-align: right;
 }
 
-.ribbon span {
+.ribbonRed span {
+  font-size: 15px;
+  font-weight: bold;
+  color: #FFF;
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 25px;
+  transform: rotate(-45deg);
+  -webkit-transform: rotate(-45deg);
+  width: 150px;
+  display: block;
+  background: #8F0808;
+  background: linear-gradient(#F70505 0%, #8F0808 100%);
+  box-shadow: 0 3px 10px -5px rgba(0, 0, 0, 1);
+  position: absolute;
+  top: 22px; left: -38px;
+}
+
+.ribbonRed span::before {
+  content: "";
+  position: absolute; left: 0px; top: 100%;
+  z-index: -1;
+  border-left: 3px solid #8F0808;
+  border-right: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+  border-top: 3px solid #8F0808;
+}
+
+.ribbonRed span::after {
+  content: "";
+  position: absolute; right: 0px; top: 100%;
+  z-index: -1;
+  border-left: 3px solid transparent;
+  border-right: 3px solid #8F0808;
+  border-bottom: 3px solid transparent;
+  border-top: 3px solid #8F0808;
+}
+
+.ribbonGreen {
+  position: absolute;
+  left: -5px; top: -5px;
+  z-index: 1;
+  overflow: hidden;
+  width: 100%; height: 100%;
+  text-align: right;
+}
+
+.ribbonGreen span {
   font-size: 15px;
   font-weight: bold;
   color: #FFF;
@@ -212,30 +259,30 @@ a {
   width: 150px;
   display: block;
   background: #79A70A;
-  background: linear-gradient(#F70505 0%, #8F0808 100%);
+  background: linear-gradient(#9BC90D 0%, #79A70A 100%);
   box-shadow: 0 3px 10px -5px rgba(0, 0, 0, 1);
   position: absolute;
   top: 22px; left: -38px;
 }
 
-.ribbon span::before {
+.ribbonGreen span::before {
   content: "";
   position: absolute; left: 0px; top: 100%;
   z-index: -1;
-  border-left: 3px solid #8F0808;
+  border-left: 3px solid #79A70A;
   border-right: 3px solid transparent;
   border-bottom: 3px solid transparent;
-  border-top: 3px solid #8F0808;
+  border-top: 3px solid #79A70A;
 }
 
-.ribbon span::after {
+.ribbonGreen span::after {
   content: "";
   position: absolute; right: 0px; top: 100%;
   z-index: -1;
   border-left: 3px solid transparent;
-  border-right: 3px solid #8F0808;
+  border-right: 3px solid #79A70A;
   border-bottom: 3px solid transparent;
-  border-top: 3px solid #8F0808;
+  border-top: 3px solid #79A70A;
 }
 // Pin ============================================================
 
@@ -251,6 +298,7 @@ a {
       width: 100%;
       border: 3px solid $royal;
       padding: 10px;
+      font-size: 2.0em;
     }
 
     .middleText {
@@ -266,7 +314,7 @@ a {
     }
 
     .pFont0 {
-      font-size: 2.0em;
+      font-size: 1.6em;
       color: grey;
       font-family: 'Arvo', serif;
     }
@@ -279,6 +327,7 @@ a {
 
     .pFont2 {
       font-weight: 700;
+      font-size:1.4em;
     }
   }
 }
@@ -374,6 +423,7 @@ a {
 
 .comboMsgColor{
   color:$positive;
+  margin-right:0.5em;
 }
 
 .comboMsg{
@@ -708,6 +758,10 @@ ul.rating li i {
 
     .iFont0 {
       color: darkgrey;
+
+      .iFont0-0 {
+        margin-right:0.5em;
+      }
     }
 
     .iFont1 {
@@ -821,6 +875,24 @@ ul.rating li i {
     .hFont2 {
       font-size: 1.1em;
       font-weight: bold;
+    }
+
+    .hFont3 {
+      position:absolute;
+      font-size: 1.0em;
+      font-weight: 900;
+      top: 1em;
+      right: 0;
+      width:5em;
+    }
+    .orangeStatus {
+      color:#ed9121;
+      font-weight: 500;
+    }
+
+    .greenStatus {
+      color:#169350;
+      font-weight: 500;
     }
   }
 }
