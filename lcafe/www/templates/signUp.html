@@ -19,21 +19,21 @@
           <!-- Name -->
           <label class="item item-input item-stacked-label" ng-class="{ 'has_error' : register.name.$invalid && !register.name.$pristine }">
                  <span class="input-label">Name</span>
-                 <input type="text"  name="name" ng-model="Account.fullname" class="form_control" required pattern="[a-z A-Z]+">
+                 <input type="text" name="name" ng-model="Account.fullname" required pattern="[a-z A-Z]+">
                   <span style="color:red" ng-show="register.name.$invalid && !register.name.$pristine" >Enter a correct name*</span>
                </label>
 
           <!-- Email -->
           <label class="item item-input item-stacked-label" ng-class="{ 'has_error' : register.email.$invalid && !register.email.$pristine }">
-                    <span class="input-label">E mail</span>
-                    <input type="email" name="email" ng-model="Account.email" class="form_control" required>
+                    <span class="input-label">Email</span>
+                    <input type="email" name="email" ng-model="Account.email" required>
                     <span style="color:red" ng-show="!register.email.$pristine && register.email.$invalid" >Enter a valid email*</span>
                   </label>
 
           <!-- Contact No -->
           <label class="item item-input item-stacked-label" ng-class="{ 'has_error' : (register.phone.$invalid && !register.phone.$pristine)}">
                       <span class="input-label">Contact No.</span>
-                      <input type="tel" ng-model="Account.phoneNumber" name="phone" class="form_control" ng-minlength="8" ng-maxlength="8" ng-pattern="/^[0-9]+$/" required>
+                      <input type="tel" ng-model="Account.phoneNumber" name="phone" ng-minlength="8" ng-maxlength="8" ng-pattern="/^[0-9]+$/" required>
                       <span style="color:red" ng-show="register.phone.$invalid && !register.phone.$pristine && !register.phone.$error.validPhone && !register.phone.$error.pattern">Enter 8-digit phone number*</span>
                       <span style="color:red" ng-show="register.phone.$error.pattern">Only numbers are allowed*</span>
                     </label>

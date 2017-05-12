@@ -351,7 +351,7 @@ app.factory('Cart', function($http, moment, APIurl, $q, Promotions) {
     return arr;
   }
 
-  function calculateCombo1n2DiscountAndQty(combo1, combo2, combo1HotDrinkDiscount, combo1ColdDrinkDiscount, combo2IceBlendedDiscount) {
+  function calculateCombo1n2n3DiscountAndQty(combo1, combo2, combo1HotDrinkDiscount, combo1ColdDrinkDiscount, combo2IceBlendedDiscount, combo3) {
     var longblackIce = 0;
     var longblackHot = 0;
     var iceTea = 0;
@@ -385,6 +385,65 @@ app.factory('Cart', function($http, moment, APIurl, $q, Promotions) {
       } else if (itemCategory == "Food") {
         food += quantity;
       }
+    }
+
+    if (combo3) { // within time
+      var discountItems = [];
+      var combo3Arr = [];
+      var combo3Objects = {};
+      var combo3ObjectsToBeDiscount = {};
+
+      // put all combo 3 items into array (item name only)
+      for (var i = 0; i < cart.items.length; i++) {
+        var combo = cart.items[i].combo;
+        var itemName = cart.items[i].itemName;
+        var quantity = cart.items[i].quantity;
+        if (combo == 3) {
+          for (var j = 0; j < quantity; j++) {
+            combo3Arr.push(itemName);
+          }
+        }
+      }
+
+      // convert and categorize items from array to objects
+      combo3Objects = combo3Arr.reduce(function(prev, item) {
+        if (item in prev)
+          prev[item]++;
+        else
+          prev[item] = 1;
+
+        return prev;
+      }, {});
+
+      // clone new object for discount
+      combo3ObjectsToBeDiscount = Object.assign({}, combo3Objects);
+
+      // 1) identify discount quantity for respective items (buy 1 get 1 free logic)
+      // 2) retrieve the price of each discount item by name
+      // 3) put all the price into array
+      for (var key in combo3ObjectsToBeDiscount) {
+        if (combo3ObjectsToBeDiscount.hasOwnProperty(key)) {
+          var qty = combo3ObjectsToBeDiscount[key];
+          combo3ObjectsToBeDiscount[key] = Math.floor(qty / 2);
+          var discountQty = combo3ObjectsToBeDiscount[key];
+          for (var i = 0; i < cart.items.length; i++) {
+            var itemName = cart.items[i].itemName;
+            var itemPrice = cart.items[i].itemPrice;
+            if (key == itemName) {
+              for (var j = 0; j < discountQty; j++) {
+                discountItems.push(itemPrice);
+                comboMsgArr.push("combo3");
+              }
+            }
+          }
+        }
+      }
+
+      for (var i = 0; i < discountItems.length; i++) {
+        discount += discountItems[i];
+      }
+
+      food -= (discountItems.length * 2);
     }
 
     if (food > 0 && (longblackIce + longblackHot + iceTea + hotTea + iceBlended) > 0) {
@@ -430,80 +489,6 @@ app.factory('Cart', function($http, moment, APIurl, $q, Promotions) {
     return obj;
   }
 
-  function calculateCombo3DiscountAndQty(combo3, withinTime) {
-    var discount = 0.0;
-    var comboMsgArr = [];
-    var obj = {};
-
-    if (combo3 && withinTime) { // within time
-      var discountItems = [];
-      var combo3Arr = [];
-      var combo3Objects = {};
-      var combo3ObjectsToBeDiscount = {};
-
-      // put all combo 3 items into array (item name only)
-      for (var i = 0; i < cart.items.length; i++) {
-        var combo = cart.items[i].combo;
-        var itemName = cart.items[i].itemName;
-        var quantity = cart.items[i].quantity;
-        if (combo == 3) {
-          for (var j = 0; j < quantity; j++) {
-            combo3Arr.push(itemName);
-          }
-        }
-      }
-
-      // convert and categorize items from array to objects
-      combo3Objects = combo3Arr.reduce(function(prev, item) {
-        if (item in prev)
-          prev[item]++;
-        else
-          prev[item] = 1;
-
-        return prev;
-      }, {});
-
-      // clone new object for discount
-      combo3ObjectsToBeDiscount = Object.assign({}, combo3Objects);
-
-      // 1) identify discount quantity for respective items (buy 1 get 1 free logic)
-      // 2) retrieve the price of each discount item by name
-      // 3) put all the price into array
-      for (var key in combo3ObjectsToBeDiscount) {
-        if (combo3ObjectsToBeDiscount.hasOwnProperty(key)) {
-          var qty = combo3ObjectsToBeDiscount[key];
-          combo3ObjectsToBeDiscount[key] = Math.floor(qty / 2);
-          var discountQty = combo3ObjectsToBeDiscount[key];
-          for (var i = 0; i < cart.items.length; i++) {
-            var itemName = cart.items[i].itemName;
-            var itemPrice = cart.items[i].itemPrice;
-            if (key == itemName) {
-              for (var j = 0; j < discountQty; j++) {
-                discount += itemPrice;
-                comboMsgArr.push("combo3");
-              }
-            }
-          }
-        }
-      }
-    }
-
-    // put discount to object
-    obj.discount = discount;
-
-    // convert from array to objects
-    obj.comboMessage = comboMsgArr.reduce(function(prev, item) {
-      if (item in prev)
-        prev[item]++;
-      else
-        prev[item] = 1;
-
-      return prev;
-    }, {});
-
-    return obj;
-  }
-
   function calculateDiscount() {
     var deferred = $q.defer();
     var combo1 = false;
@@ -528,23 +513,9 @@ app.factory('Cart', function($http, moment, APIurl, $q, Promotions) {
           }
         }
 
-        // Calculate Combo1n2 discount
-        var choiceA = calculateCombo1n2DiscountAndQty(combo1, combo2, combo1HotDrinkDiscount, combo1ColdDrinkDiscount, combo2IceBlendedDiscount);
-        console.log(choiceA);
-        // Calculate Combo3 discount
-        var choiceB = calculateCombo3DiscountAndQty(combo3, checkTime());
-        console.log(choiceB);
-        // Decision Maker --> combo1n2 or combo3?
-        if (choiceA.discount >= choiceB.discount) {
-          console.log("Take Choice A");
-          cart.discount = parseFloat(choiceA.discount).toFixed(2);
-          cart.comboMessage = convertToArray(choiceA.comboMessage);
-        } else if (choiceA.discount < choiceB.discount) {
-          console.log("Take Choice B");
-          cart.discount = parseFloat(choiceB.discount).toFixed(2);
-          cart.comboMessage = convertToArray(choiceB.comboMessage);
-        }
-
+        var calculation = calculateCombo1n2n3DiscountAndQty(combo1, combo2, combo1HotDrinkDiscount, combo1ColdDrinkDiscount, combo2IceBlendedDiscount, combo3)
+        cart.discount = parseFloat(calculation.discount).toFixed(2);
+        cart.comboMessage = convertToArray(calculation.comboMessage);
         persist();
         deferred.resolve('===========================================Discount is done :' + cart.discount);
       });
@@ -663,10 +634,10 @@ app.factory('Cart', function($http, moment, APIurl, $q, Promotions) {
       cart.custID = id;
       persist();
     },
-    isDuplicate: function(item) {
+    isDuplicate: function(itemID) {
       var isDuplicate = false;
       for (var i = 0; i < cart.items.length; i++) {
-        if (cart.items[i].itemID === item.itemID) {
+        if (cart.items[i].itemID === itemID) {
           isDuplicate = true;
           break;
         } else {

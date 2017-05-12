@@ -650,18 +650,37 @@ angular.module('starter.controllers', [])
       }
     }
 
-    function showDuplicateAlert() {
+    function showUpdatedAlert() {
       $ionicPopup.alert({
-        title: 'Duplicate Items',
-        template: '<p class="dark">You have already added this item.</b>',
+        title: 'Item updated',
+        template: '<p class="dark">You have updated this item.</b>',
         buttons: [{
           text: 'Ok',
           type: 'button-royal'
         }]
       }).then(function(res) {
-        console.log('Duplicate');
-        // window.history.back();
         $ionicHistory.goBack();
+        console.log("Item updated");
+      });
+    }
+
+    function showDuplicateAlert(itemToCart) {
+      $ionicPopup.confirm({
+        title: 'You have already added this item',
+        template: 'Do you want to wish to update the item?',
+        cancelText: 'No',
+        okText: 'Yes',
+        okType: 'button-royal'
+      }).then(function(res) {
+        if (res) {
+          Cart.remove(itemToCart.itemID);
+          Cart.add(itemToCart);
+          showUpdatedAlert();
+          console.log("Yes");
+        } else {
+          $ionicHistory.goBack();
+          console.log("No");
+        }
       });
     }
 
@@ -684,7 +703,7 @@ angular.module('starter.controllers', [])
     function showAddedAlert() {
       $ionicPopup.alert({
         title: 'Success',
-        template: '<p class="dark">Item successfully added to cart.</b>',
+        template: '<p class="dark">Item successfully added to cart.</p>',
         buttons: [{
           text: 'Ok',
           type: 'button-royal'
@@ -766,8 +785,8 @@ angular.module('starter.controllers', [])
       } else {
         itemToCart.itemRequest = "None";
       }
-      if (Cart.isDuplicate(itemToCart)) {
-        showDuplicateAlert();
+      if (Cart.isDuplicate(itemToCart.itemID)) {
+        showDuplicateAlert(itemToCart);
       } else {
         Cart.add(itemToCart);
         console.log("Before item: " + JSON.stringify($scope.item));
@@ -812,44 +831,113 @@ angular.module('starter.controllers', [])
 
   })
 
-  .controller('feedbackCtrl', function($scope, Feedback, $state, $ionicPopup) {
-
+  .controller('feedbackCtrl', function($scope, Feedback, $state, $ionicPopup, $ionicModal) {
     $scope.fb = {
-      subject: '',
       name: '',
       email: '',
-      comment: '',
-      service: 0,
-      food: 0
+      comment: ''
     };
-    $scope.rating = {};
-    $scope.rating.food = 0;
-    $scope.rating.service = 0;
-    $scope.rating.max = 5;
+    $scope.fb.foodVarietyOrSelection = 0;
+    $scope.fb.foodPrice = 0;
+    $scope.fb.foodQuality = 0;
+    $scope.fb.beverageVarietyOrSelection = 0;
+    $scope.fb.beveragePrice = 0;
+    $scope.fb.beverageQuality = 0;
+    $scope.fb.serviceCleanliness = 0;
+    $scope.fb.servicePoliteness = 0;
+    $scope.fb.serviceSpeed = 0;
 
     function popupSuccessFeedback() {
       $ionicPopup.alert({
-        title: 'Thank you for your response',
-        subTitle: 'Your response has been submitted successfully.',
+        title: 'Thank you for your feedback',
+        subTitle: 'Your feedback has been submitted successfully.',
         okType: 'button-royal'
       }).then(function(res) {
         console.log("Submitted");
       });
     }
 
-    $scope.save = function(form) {
-      $scope.fb.service = $scope.rating.service;
-      $scope.fb.food = $scope.rating.food;
-      $scope.fb.token = localStorage.getItem("accessToken");
-      Feedback.create($scope.fb).then(function() {
-        if (form) {
-          $scope.fb = {};
-          $scope.rating = {};
-          form.$setPristine();
-          form.$setUntouched();
-        }
-        popupSuccessFeedback();
+    function popupFieldRequired() {
+      $ionicPopup.alert({
+        title: 'Rating fields are required',
+        subTitle: 'Please check and give rating to all fields!',
+        okType: 'button-royal'
+      }).then(function(res) {
+        console.log("Submitted");
       });
+    }
+
+    function showPromptForUserRole() {
+      $ionicPopup.confirm({
+        title: 'Are you a staff or student?',
+        cancelText: 'Staff',
+        okText: 'Student',
+        okType: 'positive',
+        cancelType: 'positive'
+      }).then(function(res) {
+        if (res) {
+          $scope.fb.role = "Student";
+          console.log("Student");
+        } else {
+          $scope.fb.role = "Staff";
+          console.log("Staff");
+        }
+        $scope.fb.token = localStorage.getItem("accessToken");
+        console.log($scope.fb);
+        Feedback.create($scope.fb).then(function() {
+          $scope.fb = {};
+          popupSuccessFeedback();
+        });
+      });
+    }
+
+    $scope.onRatingChange = function($event, variable) {
+      switch (variable) {
+        case 'foodVarietyOrSelection':
+          $scope.fb.foodVarietyOrSelection = $event.rating;
+          break;
+        case 'foodPrice':
+          $scope.fb.foodPrice = $event.rating;
+          break;
+        case 'foodQuality':
+          $scope.fb.foodQuality = $event.rating;
+          break;
+        case 'beverageVarietyOrSelection':
+          $scope.fb.beverageVarietyOrSelection = $event.rating;
+          break;
+        case 'beveragePrice':
+          $scope.fb.beveragePrice = $event.rating;;
+          break;
+        case 'beverageQuality':
+          $scope.fb.beverageQuality = $event.rating;
+          break;
+        case 'serviceCleanliness':
+          $scope.fb.serviceCleanliness = $event.rating;
+          break;
+        case 'servicePoliteness':
+          $scope.fb.servicePoliteness = $event.rating;
+          break;
+        case 'serviceSpeed':
+          $scope.fb.serviceSpeed = $event.rating;
+          break;
+        default:
+          console.log("No updates");
+      }
+      console.log($scope.fb);
+    };
+
+    $scope.sendFeedback = function(form) {
+      if ($scope.fb.foodVarietyOrSelection == 0 || $scope.fb.foodPrice == 0 || $scope.fb.foodQuality == 0 ||
+        $scope.fb.beverageVarietyOrSelection == 0 || $scope.fb.beveragePrice == 0 || $scope.fb.beverageQuality == 0 ||
+        $scope.fb.serviceCleanliness == 0 || $scope.fb.servicePoliteness == 0 || $scope.fb.serviceSpeed == 0) {
+        popupFieldRequired();
+      } else {
+        showPromptForUserRole();
+      }
+      if (form) {
+        form.$setPristine();
+        form.$setUntouched();
+      }
     };
 
   })
@@ -1880,10 +1968,15 @@ angular.module('starter.controllers', [])
               var now = moment();
               console.log("Time has passed: " + moment(c).isBefore(now));
 
+              var fifteenMinutesAfterNow = moment().add(900, 'seconds');
+              console.log("Need 15 minutes to prepare (pre order): " + moment(c).isBefore(fifteenMinutesAfterNow));
+
               console.log("Is between time: " + moment(d).isBetween(afterTime, beforeTime));
               if (moment(d).isBetween(afterTime, beforeTime)) {
                 if (moment(c).isBefore(now)) {
                   $scope.status = "BeforeNow";
+                } else if (moment(c).isBefore(fifteenMinutesAfterNow)) {
+                  $scope.status = "FifteenMinutesAfterNow";
                 } else {
                   if (moment(d).isBetween(fifteenMinutesFromNow, beforeTime)) {
                     $scope.status = 'WithinFifteenMinutesBeforeClose';
@@ -1905,6 +1998,8 @@ angular.module('starter.controllers', [])
             deferred.resolve('Closed');
           } else if ($scope.status == 'BeforeNow') {
             deferred.resolve('BeforeNow');
+          } else if ($scope.status == 'FifteenMinutesAfterNow') {
+            deferred.resolve('FifteenMinutesAfterNow');
           } else if ($scope.status == 'Open') {
             deferred.resolve('Open');
           } else if ($scope.status == 'WithinFifteenMinutesBeforeClose') {
@@ -1954,9 +2049,19 @@ angular.module('starter.controllers', [])
       });
     }
 
+    function popupNeedPreparation() {
+      $ionicPopup.alert({
+        title: 'Need Early Pre-order',
+        template: '15 minutes preparation is needed before Pre-order',
+        okType: 'button-royal'
+      }).then(function(res) {
+        console.log("No early Pre-order");
+      });
+    }
+
     function popupTimePassed() {
       $ionicPopup.alert({
-        title: 'Selected time have passed',
+        title: 'Selected tlected time have passed',
         template: 'Please select time that is after current time.',
         okType: 'button-royal'
       }).then(function(res) {
@@ -2025,6 +2130,8 @@ angular.module('starter.controllers', [])
           }
         } else if (res == "BeforeNow") {
           popupTimePassed();
+        } else if (res == "FifteenMinutesAfterNow") {
+          popupNeedPreparation();
         } else if (res == "WithinFifteenMinutesBeforeClose") {
           popupUpNoService();
         } else if (res == "WithinFifteenMinutesAfterOpen") {

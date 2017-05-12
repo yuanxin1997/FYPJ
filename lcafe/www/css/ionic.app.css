@@ -10462,14 +10462,44 @@ p.info {
   left: 50%;
   transform: translate(-50%, -50%); }
 
-ul.rating li {
-  display: inline;
-  border: 0;
-  background: none;
-  padding-right: 1.5em; }
+.row .line {
+  border-bottom: solid black 1px;
+  height: 0; }
 
-ul.rating li i {
-  font-size: 2.0em; }
+.row .lineText {
+  padding: 0;
+  text-align: center;
+  font-size: 1.5em;
+  font-weight: 900; }
+
+.feedbackRating .ratingField {
+  width: 0;
+  display: block;
+  margin: auto; }
+
+.additional .padding .item-stacked-label {
+  padding: 0;
+  border: none;
+  margin-bottom: 1em; }
+  .additional .padding .item-stacked-label + .item-stacked-label {
+    margin-top: 10px; }
+  .additional .padding .item-stacked-label .input-label {
+    font-weight: 900; }
+  .additional .padding .item-stacked-label input {
+    padding: 0;
+    color: #444;
+    background: none;
+    border-bottom: 1px solid #444;
+    white-space: normal; }
+  .additional .padding .item-stacked-label textarea {
+    padding: 0;
+    color: #444;
+    background: none;
+    border-bottom: 1px solid #444;
+    white-space: normal; }
+  .additional .padding .item-stacked-label .cusBtn {
+    font-size: 1.5em;
+    font-weight: 400; }
 
 .fsView {
   bottom: 0;
