@@ -1,19 +1,21 @@
 <ion-view view-title="Promotions">
   <ion-nav-title class="dark">Promotions</ion-nav-title>
 
-  <ion-content class="light-bg promotion-page" scroll="false">
+  <div ng-if="!noInternet">
+    <ion-content class="light-bg promotion-page" scroll="false">
+      <ion-slides options="options" slider="data.slider">
+        <ion-slide-page ng-repeat="item in list">
+          <img ng-src="http://172.20.129.181/LCafe_Menu_Images/{{item.promoImg}}" alt="{{promoDesc}}" />
+        </ion-slide-page>
+        <ion-slide-page ng-if="hasPromo(list.length)">
+          <img ng-src="img/nopromo.png" />
+        </ion-slide-page>
+      </ion-slides>
+    </ion-content>
+  </div>
 
-    <ion-slides options="options" slider="data.slider">
-      <ion-slide-page ng-repeat="item in list">
-        <img ng-src="http://172.20.129.181/LCafe_Menu_Images/{{item.promoImg}}" alt="{{promoDesc}}" />
-      </ion-slide-page>
-      <ion-slide-page ng-if="hasPromo(list.length)">
-        <img ng-src="img/nopromo.png" />
-      </ion-slide-page>
-    </ion-slides>
-
-  </ion-content>
-
-
+  <div ng-if="noInternet">
+    <div ng-include="'templates/noWifi.html'"></div>
+  </div>
 
 </ion-view>

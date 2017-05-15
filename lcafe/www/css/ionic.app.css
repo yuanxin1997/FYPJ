@@ -10462,6 +10462,11 @@ p.info {
   left: 50%;
   transform: translate(-50%, -50%); }
 
+.feedbackText {
+  width: 90%;
+  display: block;
+  margin: auto; }
+
 .row .line {
   border-bottom: solid black 1px;
   height: 0; }
@@ -10500,6 +10505,12 @@ p.info {
   .additional .padding .item-stacked-label .cusBtn {
     font-size: 1.5em;
     font-weight: 400; }
+
+.feedbackCustompopup .popup {
+  width: 80%; }
+
+.feedbackCustompopup .popup-buttons .button {
+  font-size: 1.0em; }
 
 .fsView {
   bottom: 0;

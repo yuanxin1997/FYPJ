@@ -36,47 +36,134 @@ angular.module('starter.services', [])
     };
   });
 
-app.factory('Menu', function($http, APIurl) {
+app.factory('Menu', function($http, APIurl, $q, Connection, LatestUpdate, Initialize) {
   return {
     getFood: function() {
-      var url = APIurl + 'WebserviceCafe.asmx/retrieveMenu?itemCategory=';
-      return $http({
-        method: 'GET',
-        url: url + "food&label=" + "&token=" + localStorage.getItem("accessToken"),
-        dataType: "json",
-        contentType: "application/json; charset=utf-8"
-      }).then(function successCallback(response) {
-        return response.data;
-      }, function errorCallback(response) {
-        return response.data;
-      });
+      var deferred = $q.defer();
+      var haveInternet = Connection.checkInternet();
+      var foodMenu = localStorage.getItem('Cache::foodMenu');
+      var currentDT = localStorage.getItem('foodMenuLUDT');
+      if (haveInternet) {
+        Initialize.token().then(function(res) {
+          console.log(res);
+          LatestUpdate.get().then(function(latestDT) {
+            console.log("current: " + currentDT);
+            console.log("latest: " + latestDT);
+            if (foodMenu == null || currentDT != latestDT) {
+              var url = APIurl + 'WebserviceCafe.asmx/retrieveMenu?itemCategory=';
+              return $http({
+                method: 'GET',
+                url: url + "food&label=" + "&token=" + localStorage.getItem("accessToken"),
+                dataType: "json",
+                contentType: "application/json; charset=utf-8"
+              }).then(function successCallback(response) {
+                localStorage.setItem('Cache::foodMenu', JSON.stringify(response.data));
+                localStorage.setItem('foodMenuLUDT', latestDT);
+                console.log("using web service");
+                deferred.resolve(response.data);
+              }, function errorCallback(response) {
+                deferred.resolve(response.data);
+              });
+            } else {
+              console.log("using cache");
+              deferred.resolve(JSON.parse(foodMenu));
+            }
+          });
+        });
+      } else {
+        if (foodMenu == null) {
+          deferred.resolve("noInternet");
+        } else {
+          console.log("using cache");
+          deferred.resolve(JSON.parse(foodMenu));
+        }
+      }
+      return deferred.promise;
     },
     getBeverage: function() {
-      var url = APIurl + 'WebserviceCafe.asmx/retrieveMenu?itemCategory=';
-      return $http({
-        method: 'GET',
-        url: url + "beverages&label=" + "&token=" + localStorage.getItem("accessToken"),
-        dataType: "json",
-        contentType: "application/json; charset=utf-8"
-      }).then(function successCallback(response) {
-        return response.data;
-      }, function errorCallback(response) {
-        return response.data;
-      });
+      var deferred = $q.defer();
+      var haveInternet = Connection.checkInternet();
+      var beverageMenu = localStorage.getItem('Cache::beverageMenu');
+      var currentDT = localStorage.getItem('beverageMenuLUDT');
+      if (haveInternet) {
+        Initialize.token().then(function(res) {
+          console.log(res);
+          LatestUpdate.get().then(function(latestDT) {
+            console.log("current: " + currentDT);
+            console.log("latest: " + latestDT);
+            if (beverageMenu == null || currentDT != latestDT) {
+              var url = APIurl + 'WebserviceCafe.asmx/retrieveMenu?itemCategory=';
+              return $http({
+                method: 'GET',
+                url: url + "beverages&label=" + "&token=" + localStorage.getItem("accessToken"),
+                dataType: "json",
+                contentType: "application/json; charset=utf-8"
+              }).then(function successCallback(response) {
+                localStorage.setItem('Cache::beverageMenu', JSON.stringify(response.data));
+                localStorage.setItem('beverageMenuLUDT', latestDT);
+                console.log("using web service");
+                deferred.resolve(response.data);
+              }, function errorCallback(response) {
+                deferred.resolve(response.data);
+              });
+            } else {
+              console.log("using cache");
+              deferred.resolve(JSON.parse(beverageMenu));
+            }
+          });
+        });
+      } else {
+        if (beverageMenu == null) {
+          deferred.resolve("noInternet");
+        } else {
+          console.log("using cache");
+          deferred.resolve(JSON.parse(beverageMenu));
+        }
+      }
+      return deferred.promise;
     },
     getSpecial: function() {
-      var url = APIurl + 'WebserviceCafe.asmx/retrieveMenu?itemCategory=';
-      return $http({
-        method: 'GET',
-        url: url + "&label=specialOrNew&token=" + localStorage.getItem("accessToken"),
-        dataType: "json",
-        contentType: "application/json; charset=utf-8"
-      }).then(function successCallback(response) {
-        return response.data;
-      }, function errorCallback(response) {
-        return response.data;
-      });
-    },
+      var deferred = $q.defer();
+      var haveInternet = Connection.checkInternet();
+      var specialMenu = localStorage.getItem('Cache::specialMenu');
+      var currentDT = localStorage.getItem('specialMenuLUDT');
+      if (haveInternet) {
+        Initialize.token().then(function(res) {
+          console.log(res);
+          LatestUpdate.get().then(function(latestDT) {
+            console.log("current: " + currentDT);
+            console.log("latest: " + latestDT);
+            if (specialMenu == null || currentDT != latestDT) {
+              var url = APIurl + 'WebserviceCafe.asmx/retrieveMenu?itemCategory=';
+              return $http({
+                method: 'GET',
+                url: url + "&label=specialOrNew&token=" + localStorage.getItem("accessToken"),
+                dataType: "json",
+                contentType: "application/json; charset=utf-8"
+              }).then(function successCallback(response) {
+                localStorage.setItem('Cache::specialMenu', JSON.stringify(response.data));
+                localStorage.setItem('specialMenuLUDT', latestDT);
+                console.log("using web service");
+                deferred.resolve(response.data);
+              }, function errorCallback(response) {
+                deferred.resolve(response.data);
+              });
+            } else {
+              console.log("using cache");
+              deferred.resolve(JSON.parse(specialMenu));
+            }
+          });
+        });
+      } else {
+        if (specialMenu == null) {
+          deferred.resolve("noInternet");
+        } else {
+          console.log("using cache");
+          deferred.resolve(JSON.parse(specialMenu));
+        }
+      }
+      return deferred.promise;
+    }
   };
 });
 
@@ -224,36 +311,94 @@ app.factory('Account', function($http, Cart, APIurl) {
 app.factory('CafeInfo', function($http, APIurl, $q, Connection, LatestUpdate, Initialize) {
   return {
     get: function() {
-      var url = APIurl + 'WebserviceCafe.asmx/retrieveAllInfo?';
-      return $http({
-        method: 'GET',
-        url: url + "token=" + localStorage.getItem("accessToken"),
-        dataType: "json",
-        contentType: "application/json; charset=utf-8",
-      }).then(function successCallback(response) {
-        return response.data;
-      }, function errorCallback(response) {
-        return response.data;
-      });
+      var deferred = $q.defer();
+      var haveInternet = Connection.checkInternet();
+      var openingHours = localStorage.getItem('Cache::openingHours');
+      var currentDT = localStorage.getItem('openingHoursLUDT');
+      if (haveInternet) {
+        Initialize.token().then(function(res) {
+          console.log(res);
+          LatestUpdate.get().then(function(latestDT) {
+            console.log("current: " + currentDT);
+            console.log("latest: " + latestDT);
+            if (openingHours == null || currentDT != latestDT) {
+              var url = APIurl + 'WebserviceCafe.asmx/retrieveAllInfo?';
+              return $http({
+                method: 'GET',
+                url: url + "token=" + localStorage.getItem("accessToken"),
+                dataType: "json",
+                contentType: "application/json; charset=utf-8"
+              }).then(function successCallback(response) {
+                localStorage.setItem('Cache::openingHours', JSON.stringify(response.data));
+                localStorage.setItem('openingHoursLUDT', latestDT);
+                console.log("using web service");
+                deferred.resolve(response.data);
+              }, function errorCallback(response) {
+                deferred.resolve(response.data);
+              });
+            } else {
+              console.log("using cache");
+              deferred.resolve(JSON.parse(openingHours));
+            }
+          });
+        });
+      } else {
+        if (openingHours == null) {
+          deferred.resolve("noInternet");
+        } else {
+          console.log("using cache");
+          deferred.resolve(JSON.parse(openingHours));
+        }
+      }
+      return deferred.promise;
     },
     getHoliday: function() {
-      var url = APIurl + 'WebserviceCafe.asmx/retrieveHolidays?';
-      return $http({
-        method: 'GET',
-        url: url + "token=" + localStorage.getItem("accessToken"),
-        dataType: "json",
-        contentType: "application/json; charset=utf-8"
-      }).then(function successCallback(response) {
-        return response.data;
-      }, function errorCallback(response) {
-        return response.data;
-      });
+      var deferred = $q.defer();
+      var haveInternet = Connection.checkInternet();
+      var holidayList = localStorage.getItem('Cache::holidayList');
+      var currentDT = localStorage.getItem('holidayListLUDT');
+      if (haveInternet) {
+        Initialize.token().then(function(res) {
+          console.log(res);
+          LatestUpdate.get().then(function(latestDT) {
+            console.log("current: " + currentDT);
+            console.log("latest: " + latestDT);
+            if (holidayList == null || currentDT != latestDT) {
+              var url = APIurl + 'WebserviceCafe.asmx/retrieveHolidays?';
+              return $http({
+                method: 'GET',
+                url: url + "token=" + localStorage.getItem("accessToken"),
+                dataType: "json",
+                contentType: "application/json; charset=utf-8"
+              }).then(function successCallback(response) {
+                localStorage.setItem('Cache::holidayList', JSON.stringify(response.data));
+                localStorage.setItem('holidayListLUDT', latestDT);
+                console.log("using web service");
+                deferred.resolve(response.data);
+              }, function errorCallback(response) {
+                deferred.resolve(response.data);
+              });
+            } else {
+              console.log("using cache");
+              deferred.resolve(JSON.parse(holidayList));
+            }
+          });
+        });
+      } else {
+        if (holidayList == null) {
+          deferred.resolve("noInternet");
+        } else {
+          console.log("using cache");
+          deferred.resolve(JSON.parse(holidayList));
+        }
+      }
+      return deferred.promise;
     },
     getContact: function() {
       var deferred = $q.defer();
       var haveInternet = Connection.checkInternet();
       var contact = localStorage.getItem('Cache::contact');
-      var currentDT = localStorage.getItem('contactUsLUDT');
+      var currentDT = localStorage.getItem('contactLUDT');
       if (haveInternet) {
         Initialize.token().then(function(res) {
           console.log(res);
@@ -269,7 +414,7 @@ app.factory('CafeInfo', function($http, APIurl, $q, Connection, LatestUpdate, In
                 contentType: "application/json; charset=utf-8"
               }).then(function successCallback(response) {
                 localStorage.setItem('Cache::contact', JSON.stringify(response.data));
-                localStorage.setItem('contactUsLUDT', latestDT);
+                localStorage.setItem('contactLUDT', latestDT);
                 console.log("using web service");
                 deferred.resolve(response.data);
               }, function errorCallback(response) {
@@ -329,13 +474,6 @@ app.factory('Cart', function($http, moment, APIurl, $q, Promotions) {
       cart.preorderDateTime = '';
     cart.items = [];
     cart.comboMessage = [];
-  }
-
-  function checkTime() {
-    var d = moment();
-    var afterTime = moment().hour(09).minutes(30).seconds(0);
-    var beforeTime = moment().hour(22).minutes(30).seconds(0);
-    return moment(d).isBetween(afterTime, beforeTime);
   }
 
   function convertToArray(object) {
@@ -534,7 +672,7 @@ app.factory('Cart', function($http, moment, APIurl, $q, Promotions) {
       var afterDiscount = parseFloat(total) - parseFloat(cart.discount);
       cart.netTotal = parseFloat(afterDiscount - (afterDiscount * 0.07)).toFixed(2);
       persist();
-      deferred.resolve('===========================================Total is done: ' + cart.netTotal);
+      deferred.resolve('===========================================Net total is done: ' + cart.netTotal);
     }
     return deferred.promise;
   }
@@ -555,7 +693,7 @@ app.factory('Cart', function($http, moment, APIurl, $q, Promotions) {
       var total = parseFloat(cart.netTotal) + parseFloat(cart.GST);
       cart.total = parseFloat(total).toFixed(2);
       persist();
-      deferred.resolve('===========================================Grand is done: ' + cart.total);
+      deferred.resolve('===========================================Total is done: ' + cart.total);
     }
     return deferred.promise;
   }
@@ -689,20 +827,49 @@ app.factory('MyHistory', function($http, Cart, APIurl) {
   };
 });
 
-app.factory('Promotions', function($http, APIurl) {
+app.factory('Promotions', function($http, APIurl, $q, Connection, LatestUpdate, Initialize) {
   return {
     getAll: function() {
-      var url = APIurl + "WebserviceCafe.asmx/retrieveAllPromos?";
-      return $http({
-        method: 'GET',
-        url: url + "token=" + localStorage.getItem("accessToken"),
-        dataType: "json",
-        contentType: "application/json; charset=utf-8"
-      }).then(function successCallback(response) {
-        return response.data;
-      }, function errorCallback(response) {
-        return response.data;
-      });
+      var deferred = $q.defer();
+      var haveInternet = Connection.checkInternet();
+      var promotion = localStorage.getItem('Cache::promotion');
+      var currentDT = localStorage.getItem('promotionLUDT');
+      if (haveInternet) {
+        Initialize.token().then(function(res) {
+          console.log(res);
+          LatestUpdate.get().then(function(latestDT) {
+            console.log("current: " + currentDT);
+            console.log("latest: " + latestDT);
+            if (promotion == null || currentDT != latestDT) {
+              var url = APIurl + "WebserviceCafe.asmx/retrieveAllPromos?";
+              return $http({
+                method: 'GET',
+                url: url + "token=" + localStorage.getItem("accessToken"),
+                dataType: "json",
+                contentType: "application/json; charset=utf-8"
+              }).then(function successCallback(response) {
+                localStorage.setItem('Cache::promotion', JSON.stringify(response.data));
+                localStorage.setItem('promotionLUDT', latestDT);
+                console.log("using web service");
+                deferred.resolve(response.data);
+              }, function errorCallback(response) {
+                deferred.resolve(response.data);
+              });
+            } else {
+              console.log("using cache");
+              deferred.resolve(JSON.parse(promotion));
+            }
+          });
+        });
+      } else {
+        if (promotion == null) {
+          deferred.resolve("noInternet");
+        } else {
+          console.log("using cache");
+          deferred.resolve(JSON.parse(promotion));
+        }
+      }
+      return deferred.promise;
     },
     getAllCombo: function() {
       var url = APIurl + "WebserviceCafe.asmx/retrieveAllCombo?";
@@ -746,33 +913,91 @@ app.factory('Promotions', function($http, APIurl) {
   };
 });
 
-app.factory('Top10', function($http, APIurl) {
+app.factory('Top10', function($http, APIurl, $q, Connection, LatestUpdate, Initialize) {
   return {
     getFood: function() {
-      var url = APIurl + "WebserviceCafe.asmx/retrieveTop10MenuItems?itemCategory=";
-      return $http({
-        method: 'GET',
-        url: url + "food&token=" + localStorage.getItem("accessToken"),
-        dataType: "json",
-        contentType: "application/json; charset=utf-8"
-      }).then(function successCallback(response) {
-        return response.data;
-      }, function errorCallback() {
-        return response.data;
-      });
+      var deferred = $q.defer();
+      var haveInternet = Connection.checkInternet();
+      var top10Food = localStorage.getItem('Cache::top10Food');
+      var currentDT = localStorage.getItem('top10FoodLUDT');
+      if (haveInternet) {
+        Initialize.token().then(function(res) {
+          console.log(res);
+          LatestUpdate.get().then(function(latestDT) {
+            console.log("current: " + currentDT);
+            console.log("latest: " + latestDT);
+            if (top10Food == null || currentDT != latestDT) {
+              var url = APIurl + "WebserviceCafe.asmx/retrieveTop10MenuItems?itemCategory=";
+              return $http({
+                method: 'GET',
+                url: url + "food&token=" + localStorage.getItem("accessToken"),
+                dataType: "json",
+                contentType: "application/json; charset=utf-8"
+              }).then(function successCallback(response) {
+                localStorage.setItem('Cache::top10Food', JSON.stringify(response.data));
+                localStorage.setItem('top10FoodLUDT', latestDT);
+                console.log("using web service");
+                deferred.resolve(response.data);
+              }, function errorCallback(response) {
+                deferred.resolve(response.data);
+              });
+            } else {
+              console.log("using cache");
+              deferred.resolve(JSON.parse(top10Food));
+            }
+          });
+        });
+      } else {
+        if (top10Food == null) {
+          deferred.resolve("noInternet");
+        } else {
+          console.log("using cache");
+          deferred.resolve(JSON.parse(top10Food));
+        }
+      }
+      return deferred.promise;
     },
     getBeverage: function() {
-      var url = APIurl + "WebserviceCafe.asmx/retrieveTop10MenuItems?itemCategory=";
-      return $http({
-        method: 'GET',
-        url: url + "beverages&token=" + localStorage.getItem("accessToken"),
-        dataType: "json",
-        contentType: "application/json; charset=utf-8"
-      }).then(function successCallback(response) {
-        return response.data;
-      }, function errorCallback() {
-        return response.data;
-      });
+      var deferred = $q.defer();
+      var haveInternet = Connection.checkInternet();
+      var top10Beverage = localStorage.getItem('Cache::top10Beverage');
+      var currentDT = localStorage.getItem('top10BeverageLUDT');
+      if (haveInternet) {
+        Initialize.token().then(function(res) {
+          console.log(res);
+          LatestUpdate.get().then(function(latestDT) {
+            console.log("current: " + currentDT);
+            console.log("latest: " + latestDT);
+            if (top10Beverage == null || currentDT != latestDT) {
+              var url = APIurl + "WebserviceCafe.asmx/retrieveTop10MenuItems?itemCategory=";
+              return $http({
+                method: 'GET',
+                url: url + "beverages&token=" + localStorage.getItem("accessToken"),
+                dataType: "json",
+                contentType: "application/json; charset=utf-8"
+              }).then(function successCallback(response) {
+                localStorage.setItem('Cache::top10Beverage', JSON.stringify(response.data));
+                localStorage.setItem('top10BeverageLUDT', latestDT);
+                console.log("using web service");
+                deferred.resolve(response.data);
+              }, function errorCallback(response) {
+                deferred.resolve(response.data);
+              });
+            } else {
+              console.log("using cache");
+              deferred.resolve(JSON.parse(top10Beverage));
+            }
+          });
+        });
+      } else {
+        if (top10Beverage == null) {
+          deferred.resolve("noInternet");
+        } else {
+          console.log("using cache");
+          deferred.resolve(JSON.parse(top10Beverage));
+        }
+      }
+      return deferred.promise;
     }
   };
 });
@@ -830,7 +1055,16 @@ app.factory('Token', function($http, APIurl, Accesskey) {
   };
 });
 
-app.factory('Connection', function() {
+app.factory('Connection', function($ionicPopup, ) {
+  function popupCheckInternet() {
+    $ionicPopup.alert({
+      title: 'No connection found',
+      subTitle: 'Please check your internet connection and try again later.',
+      okType: 'button-assertive'
+    }).then(function(res) {
+      console.log('No connection found');
+    });
+  }
   return {
     checkInternet: function() {
       var haveInternet = true;
@@ -838,6 +1072,20 @@ app.factory('Connection', function() {
         if (window.Connection) {
           if (navigator.connection.type == Connection.NONE) {
             haveInternet = false;
+          }
+        }
+      }
+      console.log("Have Internet: " + haveInternet);
+
+      return haveInternet;
+    },
+    checkInterentWithPopup: function() {
+      var haveInternet = true;
+      if (window.cordova) {
+        if (window.Connection) {
+          if (navigator.connection.type == Connection.NONE) {
+            haveInternet = false;
+            popupCheckInternet();
           }
         }
       }
@@ -878,14 +1126,16 @@ app.factory('Initialize', function($http, APIurl, Accesskey, Token, $q) {
         localStorage.setItem("favouriteItemsID", '');
       }
       console.log("Your token: " + localStorage.getItem("accessToken"));
-      console.log("Your id：" + acccountId);
-      console.log("foodMenuLUDT：" + localStorage.getItem("foodMenuLUDT"));
-      console.log("beverageMenuLUDT：" + localStorage.getItem("beverageMenuLUDT"));
-      console.log("specialMenuLUDT：" + localStorage.getItem("specialMenuLUDT"));
-      console.log("promotionLUDT：" + localStorage.getItem("promotionLUDT"));
-      console.log("top10LUDT：" + localStorage.getItem("top10LUDT"));
-      console.log("aboutUsLUDT：" + localStorage.getItem("aboutUsLUDT"));
-      console.log("contactUsLUDT：" + localStorage.getItem("contactUsLUDT"));
+      console.log("Your id:" + acccountId);
+      console.log("foodMenuLUDT:" + localStorage.getItem("foodMenuLUDT"));
+      console.log("beverageMenuLUDT:" + localStorage.getItem("beverageMenuLUDT"));
+      console.log("specialMenuLUDT:" + localStorage.getItem("specialMenuLUDT"));
+      console.log("promotionLUDT:" + localStorage.getItem("promotionLUDT"));
+      console.log("top10FoodLUDT:" + localStorage.getItem("top10FoodLUDT"));
+      console.log("top10BeverageLUDT:" + localStorage.getItem("top10BeverageLUDT"));
+      console.log("openingHoursLUDT:" + localStorage.getItem("openingHoursLUDT"));
+      console.log("holidayListLUDT:" + localStorage.getItem("holidayListLUDT"));
+      console.log("contactLUDT:" + localStorage.getItem("contactLUDT"));
     },
     token: function() {
       var deferred = $q.defer();
@@ -896,18 +1146,22 @@ app.factory('Initialize', function($http, APIurl, Accesskey, Token, $q) {
           localStorage.setItem("beverageMenuLUDT", "");
           localStorage.setItem("specialMenuLUDT", "");
           localStorage.setItem("promotionLUDT", "");
-          localStorage.setItem("top10LUDT", "");
-          localStorage.setItem("aboutUsLUDT", "");
-          localStorage.setItem("contactUsLUDT", "");
+          localStorage.setItem("top10FoodLUDT", "");
+          localStorage.setItem("top10BeverageLUDT", "");
+          localStorage.setItem("openingHoursLUDT", "");
+          localStorage.setItem("holidayListLUDT", "");
+          localStorage.setItem("contactLUDT", "");
           console.log("New token: " + localStorage.getItem("accessToken"));
-          console.log("Your id：" + localStorage.getItem('accountId'));
-          console.log("foodMenuLUDT：" + localStorage.getItem("foodMenuLUDT"));
-          console.log("beverageMenuLUDT：" + localStorage.getItem("beverageMenuLUDT"));
-          console.log("specialMenuLUDT：" + localStorage.getItem("specialMenuLUDT"));
-          console.log("promotionLUDT：" + localStorage.getItem("promotionLUDT"));
-          console.log("top10LUDT：" + localStorage.getItem("top10LUDT"));
-          console.log("aboutUsLUDT：" + localStorage.getItem("aboutUsLUDT"));
-          console.log("contactUsLUDT：" + localStorage.getItem("contactUsLUDT"));
+          console.log("Your id:" + localStorage.getItem('accountId'));
+          console.log("foodMenuLUDT:" + localStorage.getItem("foodMenuLUDT"));
+          console.log("beverageMenuLUDT:" + localStorage.getItem("beverageMenuLUDT"));
+          console.log("specialMenuLUDT:" + localStorage.getItem("specialMenuLUDT"));
+          console.log("promotionLUDT:" + localStorage.getItem("promotionLUDT"));
+          console.log("top10FoodLUDT:" + localStorage.getItem("top10FoodLUDT"));
+          console.log("top10BeverageLUDT:" + localStorage.getItem("top10BeverageLUDT"))
+          console.log("openingHoursLUDT:" + localStorage.getItem("openingHoursLUDT"));
+          console.log("holidayListLUDT:" + localStorage.getItem("holidayListLUDT"));
+          console.log("contactLUDT:" + localStorage.getItem("contactLUDT"));
           deferred.resolve("checked");
         });
       } else {

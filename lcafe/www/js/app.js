@@ -3,7 +3,8 @@ var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.serv
     $stateProvider.state('app', {
       url: '/app',
       abstract: true,
-      templateUrl: 'templates/tabs.html'
+      templateUrl: 'templates/tabs.html',
+      cache: false
     });
     $stateProvider.state('app.food', {
       url: '/food',
@@ -68,7 +69,8 @@ var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.serv
     $stateProvider.state('top10', {
       url: '/top10',
       abstract: true,
-      templateUrl: 'templates/top10Tabs.html'
+      templateUrl: 'templates/top10Tabs.html',
+      cache: false
     });
     $stateProvider.state('top10.food', {
       url: '/top10Food',

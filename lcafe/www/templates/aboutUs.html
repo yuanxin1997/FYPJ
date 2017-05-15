@@ -1,39 +1,45 @@
 <ion-view view-title="About Us">
   <ion-nav-title class="dark">About Us</ion-nav-title>
-  <ion-content class="light-bg">
-    <div class="padding">
 
-      <h3 class="royal">L'Café</h3>
-      <img class="abFont0"ng-src="img/lcafe.jpg" />
-      <p class="dark">A Nanyang Polytechnic Teaching Enterprise Project Centre set up to provide hands-on training for students from the Diploma in Food & Beverage Business. </p>
+  <div ng-if="!noInternet">
+    <ion-content class="light-bg">
+      <div class="padding">
+        <h3 class="royal">L'Café</h3>
+        <img class="abFont0" ng-src="img/lcafe.jpg" />
+        <p class="dark">A Nanyang Polytechnic Teaching Enterprise Project Centre set up to provide hands-on training for students from the Diploma in Food & Beverage Business. </p>
 
-      <h3 class="royal">Our Location</h1>
+        <h3 class="royal">Our Location</h1>
       <p class="dark">Nanyang Polytechnic Block A, Level 4, Library, 180 Ang Mo Kio Avenue 8, S(569830)</p>
 
       <h3 class="royal">Status</h3>
-      <p class="dark abFont1" ng-show="status == 'Open'">L'Cafe is <span class="openColor"><b>Open</b></span> now.</p>
-      <p class="dark abFont1" ng-show="status == 'Closed'">L'Cafe is <span class="closeColor"><b>Closed</b></span> now.</p>
-      <p class="dark abFont1" ng-show="status == 'ClosingSoon'">L'Cafe is <span class="openColor"><b>Closing soon</b></span> now.</p>
+        <p class="dark abFont1" ng-show="status == 'Open'">L'Cafe is <span class="openColor"><b>Open</b></span> now.</p>
+        <p class="dark abFont1" ng-show="status == 'Closed'">L'Cafe is <span class="closeColor"><b>Closed</b></span> now.</p>
+        <p class="dark abFont1" ng-show="status == 'ClosingSoon'">L'Cafe is <span class="openColor"><b>Closing soon</b></span> now.</p>
 
-      <h3 class="royal" ng-show="todayRemark != ''">Today's Remarks</h3>
-      <p class="dark abFont1" ng-show="todayRemark != ''"> "{{todayRemark}}"</p>
+        <h3 class="royal" ng-show="todayRemark != ''">Today's Remarks</h3>
+        <p class="dark abFont1" ng-show="todayRemark != ''"> "{{todayRemark}}"</p>
 
-      <h3 class="royal">Opening hours</h3>
-      <div class="list list-inset">
-        <label class="item item-input item-stacked-label" ng-repeat="cafeInfo in cafeInfos">
+        <h3 class="royal">Opening hours</h3>
+        <div class="list list-inset">
+          <label class="item item-input item-stacked-label" ng-repeat="cafeInfo in cafeInfos">
           <span class="input-label dark">{{ cafeInfo.day }}</span>
           <span class="data">{{ cafeInfo.openinghours }} - {{ cafeInfo.closinghours }}</span>
         </label>
-        <label class="item item-input item-stacked-label">
+          <label class="item item-input item-stacked-label">
         <span class="input-label dark">Weekends</span>
         <span class="data">Closed</span>
         </label>
-        <label class="item item-input item-stacked-label">
+          <label class="item item-input item-stacked-label">
         <span class="input-label dark">School/Public holidays</span>
         <span class="data">Closed</span>
         </label>
+        </div>
       </div>
+    </ion-content>
+  </div>
 
-    </div>
-  </ion-content>
+  <div ng-if="noInternet">
+    <div ng-include="'templates/noWifi.html'"></div>
+  </div>
+
 </ion-view>

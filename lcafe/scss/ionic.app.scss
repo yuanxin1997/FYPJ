@@ -488,7 +488,6 @@ a {
     }
   }
 }
-
 // Pre Order ============================================================
 
 .preOrder-page {
@@ -685,6 +684,7 @@ p.info {
   animation-duration: 1s;
 }
 // qrCode Modal ============================================================
+
 .qrImage{
   margin: 0;
   position: absolute;
@@ -693,6 +693,12 @@ p.info {
   transform: translate(-50%, -50%);
 }
 // Feedback ============================================================
+
+.feedbackText{
+  width:90%;
+  display:block;
+  margin:auto;
+}
 
 .row{
   .line{
@@ -750,6 +756,15 @@ p.info {
     }
   }
 }
+// feedbackCustomPopup
+.feedbackCustompopup{
+  .popup{
+    width: 80%;
+  }
+  .popup-buttons .button {
+    font-size:1.0em;
+  }
+}
 
 // Filter & Sorting ============================================================
 
@@ -759,7 +774,6 @@ p.info {
   top: initial;
   height: 40%;
 }
-
 // Order Details ============================================================
 
 .list {
@@ -838,6 +852,7 @@ p.info {
   }
 }
 // Favourite ============================================================
+
 .list{
   .item{
     .fFont0{

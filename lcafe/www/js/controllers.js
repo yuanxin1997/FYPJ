@@ -1,7 +1,7 @@
 angular.module('starter.controllers', [])
   .constant('salt', 'bfawuiobwfb79237bf2628vf763vf32if732vfb937bvf89g7ase89vf2378vf812v783g92g793')
 
-  .controller('authCtrl', function($scope, $ionicHistory, Account, $rootScope, $state, $ionicPopup, md5, salt, Cart, $ionicModal) {
+  .controller('authCtrl', function($scope, $ionicHistory, Account, $rootScope, $state, $ionicPopup, md5, salt, Cart, $ionicModal, Connection) {
 
     $scope.Account = {};
     $scope.dataSend = {};
@@ -75,101 +75,113 @@ angular.module('starter.controllers', [])
     }
 
     $scope.createAcc = function(acc, form) {
-      $scope.dataSend.fullname = $scope.Account.fullname;
-      $scope.dataSend.email = $scope.Account.email;
-      $scope.dataSend.phoneNumber = $scope.Account.phoneNumber;
-      $scope.dataSend.password = md5.createHash($scope.Account.password + salt);
-      $scope.dataSend.token = localStorage.getItem("accessToken");
-      Account.checkDuplicateEmail(acc.email).then(function(res) {
-        if (res.message != 'unsuccessful') {
-          Account.create($scope.dataSend).then(function(res) {
+      var haveInternet = Connection.checkInterentWithPopup();
+      if (haveInternet) {
+        $scope.dataSend.fullname = $scope.Account.fullname;
+        $scope.dataSend.email = $scope.Account.email;
+        $scope.dataSend.phoneNumber = $scope.Account.phoneNumber;
+        $scope.dataSend.password = md5.createHash($scope.Account.password + salt);
+        $scope.dataSend.token = localStorage.getItem("accessToken");
+        Account.checkDuplicateEmail(acc.email).then(function(res) {
+          if (res.message != 'unsuccessful') {
+            Account.create($scope.dataSend).then(function(res) {
+              if (form) {
+                $scope.Account = {};
+                form.$setPristine();
+                form.$setUntouched();
+              }
+              popupSuccessSignUp();
+            });
+          } else {
+            popupEmailTaken();
+          }
+        });
+      }
+    };
+
+    $scope.login = function(l, form) {
+      var haveInternet = Connection.checkInterentWithPopup();
+      if (haveInternet) {
+        var passwordHash = md5.createHash(l.password + salt);
+        Account.checkTempPassword(l.email).then(function(res) {
+          console.log(res.message);
+          if (res.message != 'exist') {
+            Account.login(l.email, passwordHash).then(function(res) {
+              if (res.message != 'unsuccessful') {
+                var id = res.message;
+                localStorage.setItem("accountId", id);
+                Cart.setCustId(id);
+                $rootScope.menuState = "login";
+                console.log("Your id: " + localStorage.getItem("accountId"));
+                Account.get(localStorage.getItem('accountId')).then(function(response) {
+                  localStorage.setItem("favouriteItemsID", response.favouriteItemsID);
+                });
+                if ($rootScope.payment != 'true') {
+                  $state.go('app.food');
+                } else {
+                  $state.go('payment');
+                }
+              } else {
+                popupLoginFail();
+              }
+            });
+          } else {
+            Account.loginWithTempPassword(l.email, l.password).then(function(res) {
+              console.log(res.message);
+              if (res.message != 'unsuccessful') {
+                var id = res.message;
+                localStorage.setItem("accountId", id);
+                Cart.setCustId(id);
+                $rootScope.menuState = "login";
+                console.log("Your id: " + localStorage.getItem("accountId"));
+                Account.get(localStorage.getItem('accountId')).then(function(response) {
+                  localStorage.setItem("favouriteItemsID", response.favouriteItemsID);
+                });
+                $state.go('resetPassword');
+              } else {
+                popupLoginFail();
+              }
+            });
+          }
+        });
+      }
+    };
+
+    $scope.requestLink = function(req, form) {
+      var haveInternet = Connection.checkInterentWithPopup();
+      if (haveInternet) {
+        Account.checkEmail(req.email).then(function(res) {
+          if (res.message != 'unsuccessful') {
+            // Account.create($scope.dataSend).then(function(res) {
             if (form) {
               $scope.Account = {};
               form.$setPristine();
               form.$setUntouched();
             }
-            popupSuccessSignUp();
-          });
-        } else {
-          popupEmailTaken();
-        }
-      });
-    };
-
-    $scope.login = function(l, form) {
-      var passwordHash = md5.createHash(l.password + salt);
-      Account.checkTempPassword(l.email).then(function(res) {
-        console.log(res.message);
-        if (res.message != 'exist') {
-          Account.login(l.email, passwordHash).then(function(res) {
-            if (res.message != 'unsuccessful') {
-              var id = res.message;
-              localStorage.setItem("accountId", id);
-              Cart.setCustId(id);
-              $rootScope.menuState = "login";
-              console.log("Your id: " + localStorage.getItem("accountId"));
-              Account.get(localStorage.getItem('accountId')).then(function(response) {
-                localStorage.setItem("favouriteItemsID", response.favouriteItemsID);
-              });
-              if ($rootScope.payment != 'true') {
-                $state.go('app.food');
-              } else {
-                $state.go('payment');
-              }
-            } else {
-              popupLoginFail();
-            }
-          });
-        } else {
-          Account.loginWithTempPassword(l.email, l.password).then(function(res) {
-            console.log(res.message);
-            if (res.message != 'unsuccessful') {
-              var id = res.message;
-              localStorage.setItem("accountId", id);
-              Cart.setCustId(id);
-              $rootScope.menuState = "login";
-              console.log("Your id: " + localStorage.getItem("accountId"));
-              Account.get(localStorage.getItem('accountId')).then(function(response) {
-                localStorage.setItem("favouriteItemsID", response.favouriteItemsID);
-              });
-              $state.go('resetPassword');
-            } else {
-              popupLoginFail();
-            }
-          });
-        }
-      });
-    };
-
-    $scope.requestLink = function(req, form) {
-      Account.checkEmail(req.email).then(function(res) {
-        if (res.message != 'unsuccessful') {
-          // Account.create($scope.dataSend).then(function(res) {
-          if (form) {
-            $scope.Account = {};
-            form.$setPristine();
-            form.$setUntouched();
+            popupSucessRequest();
+            // });
+          } else {
+            popupEmailNotFound();
           }
-          popupSucessRequest();
-          // });
-        } else {
-          popupEmailNotFound();
-        }
-      });
+        });
+      }
     };
 
     $scope.changePassword = function(Password, form) {
-      $scope.dataSend2.custID = localStorage.getItem("accountId");
-      $scope.dataSend2.custPassword = md5.createHash(Password.new + salt);
-      $scope.dataSend2.token = localStorage.getItem("accessToken");
-      Account.changePassword($scope.dataSend2).then(function(response) {
-        if (form) {
-          $scope.Password = {};
-          form.$setPristine();
-          form.$setUntouched();
-        }
-        popupSuccessReset();
-      });
+      var haveInternet = Connection.checkInterentWithPopup();
+      if (haveInternet) {
+        $scope.dataSend2.custID = localStorage.getItem("accountId");
+        $scope.dataSend2.custPassword = md5.createHash(Password.new + salt);
+        $scope.dataSend2.token = localStorage.getItem("accessToken");
+        Account.changePassword($scope.dataSend2).then(function(response) {
+          if (form) {
+            $scope.Password = {};
+            form.$setPristine();
+            form.$setUntouched();
+          }
+          popupSuccessReset();
+        });
+      }
     };
 
   })
@@ -225,21 +237,25 @@ angular.module('starter.controllers', [])
       return arr;
     };
 
-    Menu.getFood().then(function(menu) {
-      $scope.foodMenu = menu;
-      for (var i = 0; i < menu.length; i++) {
-        tempArr.push(menu[i].itemSubCategory);
-      }
-      uniqueArr = tempArr.unique();
-      for (var j = 0; j < uniqueArr.length; j++) {
-        var obj = {};
-        obj.text = uniqueArr[j];
-        obj.checked = true;
-        $scope.filterItems.push(obj);
-        $scope.selected.push(uniqueArr[j]);
-        $scope.default.push(uniqueArr[j]);
-      }
-    });
+    function getData() {
+      Menu.getFood().then(function(menu) {
+        $scope.foodMenu = menu;
+        for (var i = 0; i < menu.length; i++) {
+          tempArr.push(menu[i].itemSubCategory);
+        }
+        uniqueArr = tempArr.unique();
+        for (var j = 0; j < uniqueArr.length; j++) {
+          var obj = {};
+          obj.text = uniqueArr[j];
+          obj.checked = true;
+          $scope.filterItems.push(obj);
+          $scope.selected.push(uniqueArr[j]);
+          $scope.default.push(uniqueArr[j]);
+        }
+      });
+    }
+
+    getData();
 
     $scope.customFilter = function(item) {
       return ($scope.selected.indexOf(item.itemSubCategory) !== -1);
@@ -286,7 +302,7 @@ angular.module('starter.controllers', [])
     };
 
     $scope.$on('$destroy', function() {
-      $scope.sortModal.remove();
+
     });
 
     $scope.$on('modal.hidden', function() {
@@ -320,7 +336,7 @@ angular.module('starter.controllers', [])
     };
 
     $scope.$on('$destroy', function() {
-      $scope.filterModal.remove();
+
     });
 
     $scope.$on('modal.hidden', function() {
@@ -372,21 +388,25 @@ angular.module('starter.controllers', [])
       return arr;
     };
 
-    Menu.getBeverage().then(function(menu) {
-      $scope.drinkMenu = menu;
-      for (var i = 0; i < menu.length; i++) {
-        tempArr.push(menu[i].itemSubCategory);
-      }
-      uniqueArr = tempArr.unique();
-      for (var j = 0; j < uniqueArr.length; j++) {
-        var obj = {};
-        obj.text = uniqueArr[j];
-        obj.checked = true;
-        $scope.filterItems.push(obj);
-        $scope.selected.push(uniqueArr[j]);
-        $scope.default.push(uniqueArr[j]);
-      }
-    });
+    function getData() {
+      Menu.getBeverage().then(function(menu) {
+        $scope.drinkMenu = menu;
+        for (var i = 0; i < menu.length; i++) {
+          tempArr.push(menu[i].itemSubCategory);
+        }
+        uniqueArr = tempArr.unique();
+        for (var j = 0; j < uniqueArr.length; j++) {
+          var obj = {};
+          obj.text = uniqueArr[j];
+          obj.checked = true;
+          $scope.filterItems.push(obj);
+          $scope.selected.push(uniqueArr[j]);
+          $scope.default.push(uniqueArr[j]);
+        }
+      });
+    }
+
+    getData();
 
     $scope.customFilter = function(item) {
       return ($scope.selected.indexOf(item.itemSubCategory) !== -1);
@@ -424,7 +444,7 @@ angular.module('starter.controllers', [])
     };
 
     $scope.$on('$destroy', function() {
-      $scope.sortModal.remove();
+
     });
 
     $scope.$on('modal.hidden', function() {
@@ -458,7 +478,7 @@ angular.module('starter.controllers', [])
     };
 
     $scope.$on('$destroy', function() {
-      $scope.filterModal.remove();
+
     });
 
     $scope.$on('modal.hidden', function() {
@@ -510,21 +530,25 @@ angular.module('starter.controllers', [])
       return arr;
     };
 
-    Menu.getSpecial().then(function(menu) {
-      $scope.specialMenu = menu;
-      for (var i = 0; i < menu.length; i++) {
-        tempArr.push(menu[i].itemSubCategory);
-      }
-      uniqueArr = tempArr.unique();
-      for (var j = 0; j < uniqueArr.length; j++) {
-        var obj = {};
-        obj.text = uniqueArr[j];
-        obj.checked = true;
-        $scope.filterItems.push(obj);
-        $scope.selected.push(uniqueArr[j]);
-        $scope.default.push(uniqueArr[j]);
-      }
-    });
+    function getData() {
+      Menu.getSpecial().then(function(menu) {
+        $scope.specialMenu = menu;
+        for (var i = 0; i < menu.length; i++) {
+          tempArr.push(menu[i].itemSubCategory);
+        }
+        uniqueArr = tempArr.unique();
+        for (var j = 0; j < uniqueArr.length; j++) {
+          var obj = {};
+          obj.text = uniqueArr[j];
+          obj.checked = true;
+          $scope.filterItems.push(obj);
+          $scope.selected.push(uniqueArr[j]);
+          $scope.default.push(uniqueArr[j]);
+        }
+      });
+    }
+
+    getData();
 
     $scope.customFilter = function(item) {
       return ($scope.selected.indexOf(item.itemSubCategory) !== -1);
@@ -570,7 +594,7 @@ angular.module('starter.controllers', [])
     };
 
     $scope.$on('$destroy', function() {
-      $scope.sortModal.remove();
+
     });
 
     $scope.$on('modal.hidden', function() {
@@ -604,7 +628,7 @@ angular.module('starter.controllers', [])
     };
 
     $scope.$on('$destroy', function() {
-      $scope.filterModal.remove();
+
     });
 
     $scope.$on('modal.hidden', function() {
@@ -627,7 +651,7 @@ angular.module('starter.controllers', [])
 
   })
 
-  .controller('itemCtrl', function($scope, $state, Items, Cart, $stateParams, $ionicPopup, $timeout, $ionicHistory, Favourite, $rootScope, $filter) {
+  .controller('itemCtrl', function($scope, $state, Items, Cart, $stateParams, $ionicPopup, $timeout, $ionicHistory, Favourite, $rootScope, $filter, Connection) {
 
     var id = $stateParams.id;
     var itemToCart;
@@ -819,19 +843,23 @@ angular.module('starter.controllers', [])
     };
 
     $scope.$on('$ionicView.leave', function() {
-      if ($rootScope.menuState == 'login') {
-        $scope.dataSend.custID = localStorage.getItem("accountId");
-        $scope.dataSend.favouriteItemsID = localStorage.getItem("favouriteItemsID");
-        $scope.dataSend.token = localStorage.getItem("accessToken");
-        Favourite.updateFavourites($scope.dataSend).then(function(response) {
-          console.log(response);
-        });
+      var haveInternet = Connection.checkInternet();
+      if (haveInternet) {
+        if ($rootScope.menuState == 'login') {
+          $scope.dataSend.custID = localStorage.getItem("accountId");
+          $scope.dataSend.favouriteItemsID = localStorage.getItem("favouriteItemsID");
+          $scope.dataSend.token = localStorage.getItem("accessToken");
+          Favourite.updateFavourites($scope.dataSend).then(function(response) {
+            console.log(response);
+          });
+        }
       }
     });
 
   })
 
-  .controller('feedbackCtrl', function($scope, Feedback, $state, $ionicPopup, $ionicModal) {
+  .controller('feedbackCtrl', function($scope, Feedback, $state, $ionicPopup, $ionicModal, Connection) {
+
     $scope.fb = {
       name: '',
       email: '',
@@ -853,6 +881,7 @@ angular.module('starter.controllers', [])
         subTitle: 'Your feedback has been submitted successfully.',
         okType: 'button-royal'
       }).then(function(res) {
+        $state.go('app.food');
         console.log("Submitted");
       });
     }
@@ -869,18 +898,34 @@ angular.module('starter.controllers', [])
 
     function showPromptForUserRole() {
       $ionicPopup.confirm({
-        title: 'Are you a staff or student?',
-        cancelText: 'Staff',
-        okText: 'Student',
-        okType: 'positive',
-        cancelType: 'positive'
+        title: 'Are you from NYP(Staff/Student) or a Guest?',
+        cssClass: 'feedbackCustompopup',
+        buttons: [{
+            text: 'Guest',
+            type: 'positive',
+            onTap: function(e) {
+              return "Guest";
+            }
+          },
+          {
+            text: 'Staff',
+            type: 'positive',
+            onTap: function(e) {
+              return "Staff";
+            }
+          },
+          {
+            text: 'Student',
+            type: 'positive',
+            onTap: function(e) {
+              return "Student";
+            }
+          }
+        ]
       }).then(function(res) {
         if (res) {
-          $scope.fb.role = "Student";
-          console.log("Student");
-        } else {
-          $scope.fb.role = "Staff";
-          console.log("Staff");
+          $scope.fb.role = res;
+          console.log(res);
         }
         $scope.fb.token = localStorage.getItem("accessToken");
         console.log($scope.fb);
@@ -927,22 +972,25 @@ angular.module('starter.controllers', [])
     };
 
     $scope.sendFeedback = function(form) {
-      if ($scope.fb.foodVarietyOrSelection == 0 || $scope.fb.foodPrice == 0 || $scope.fb.foodQuality == 0 ||
-        $scope.fb.beverageVarietyOrSelection == 0 || $scope.fb.beveragePrice == 0 || $scope.fb.beverageQuality == 0 ||
-        $scope.fb.serviceCleanliness == 0 || $scope.fb.servicePoliteness == 0 || $scope.fb.serviceSpeed == 0) {
-        popupFieldRequired();
-      } else {
-        showPromptForUserRole();
-      }
-      if (form) {
-        form.$setPristine();
-        form.$setUntouched();
+      var haveInternet = Connection.checkInterentWithPopup();
+      if (haveInternet) {
+        if ($scope.fb.foodVarietyOrSelection == 0 || $scope.fb.foodPrice == 0 || $scope.fb.foodQuality == 0 ||
+          $scope.fb.beverageVarietyOrSelection == 0 || $scope.fb.beveragePrice == 0 || $scope.fb.beverageQuality == 0 ||
+          $scope.fb.serviceCleanliness == 0 || $scope.fb.servicePoliteness == 0 || $scope.fb.serviceSpeed == 0) {
+          popupFieldRequired();
+        } else {
+          showPromptForUserRole();
+        }
+        if (form) {
+          form.$setPristine();
+          form.$setUntouched();
+        }
       }
     };
 
   })
 
-  .controller('cartCtrl', function($scope, $rootScope, $state, $ionicPopup, Cart, Promotions, $ionicContentBanner, $timeout, $ionicSideMenuDelegate, $ionicModal, $ionicSlideBoxDelegate) {
+  .controller('cartCtrl', function($scope, $rootScope, $state, $ionicPopup, Cart, Promotions, $ionicContentBanner, $timeout, $ionicSideMenuDelegate, $ionicModal, $ionicSlideBoxDelegate, Connection) {
 
     var contentBannerInstance;
     $scope.cart = Cart.get();
@@ -1054,22 +1102,25 @@ angular.module('starter.controllers', [])
     });
 
     $scope.openModal = function(msg) {
-      Promotions.getAll().then(function(res) {
-        $scope.list = [];
-        for (var i = 0; i < res.length; i++) {
-          console.log(res[i]);
-          if (res[i].status == 1 && res[i].comboType == "combo1" && msg == "combo1") {
-            $scope.list.push(res[i]);
-          } else if (res[i].status == 1 && res[i].comboType == "combo2" && msg == "combo2") {
-            $scope.list.push(res[i]);
-          } else if (res[i].status == 1 && res[i].comboType == "combo3" && msg == "combo3") {
-            $scope.list.push(res[i]);
+      var haveInternet = Connection.checkInterentWithPopup();
+      if (haveInternet) {
+        Promotions.getAll().then(function(res) {
+          $scope.list = [];
+          for (var i = 0; i < res.length; i++) {
+            console.log(res[i]);
+            if (res[i].status == 1 && res[i].comboType == "combo1" && msg == "combo1") {
+              $scope.list.push(res[i]);
+            } else if (res[i].status == 1 && res[i].comboType == "combo2" && msg == "combo2") {
+              $scope.list.push(res[i]);
+            } else if (res[i].status == 1 && res[i].comboType == "combo3" && msg == "combo3") {
+              $scope.list.push(res[i]);
+            }
           }
-        }
-        console.log($scope.list);
-      });
-      $ionicSlideBoxDelegate.slide(0);
-      $scope.modal.show();
+          console.log($scope.list);
+        });
+        $ionicSlideBoxDelegate.slide(0);
+        $scope.modal.show();
+      }
     };
 
     $scope.closeModal = function() {
@@ -1098,21 +1149,26 @@ angular.module('starter.controllers', [])
 
   .controller('promoCtrl', function($scope, $state, Promotions, $ionicSideMenuDelegate) {
 
-    Promotions.getAll().then(function(res) {
-      $scope.list = [];
-      for (var i = 0; i < res.length; i++) {
-        if (res[i].status == 1) {
-          $scope.list.push(res[i]);
+    $scope.noInternet = false;
+
+    function getData() {
+      Promotions.getAll().then(function(res) {
+        if (res != "noInternet") {
+          $scope.noInternet = false;
+          $scope.list = [];
+          for (var i = 0; i < res.length; i++) {
+            if (res[i].status == 1) {
+              $scope.list.push(res[i]);
+            }
+          }
+        } else {
+          $scope.noInternet = true;
         }
-      }
-      console.log($scope.list);
-    });
-    // Promotions.emailTest().then(function(res) {
-    //   console.log(res);
-    // });
-    Promotions.getAllCombo().then(function(res) {
-      console.log(res);
-    })
+      });
+    }
+
+    getData();
+
     $scope.hasPromo = function(length) {
       if (length < 1) {
         return true;
@@ -1121,39 +1177,69 @@ angular.module('starter.controllers', [])
       }
     };
 
+    $scope.reconnect = function() {
+      getData();
+    };
+
     $ionicSideMenuDelegate.canDragContent(false);
 
   })
 
   .controller('topFoodCtrl', function($scope, $state, Top10, $ionicPopup) {
 
+    $scope.noInternet = false;
     $scope.items = [];
 
-    Top10.getFood().then(function(res) {
-      for (var i = 0; i < res.length; i++) {
-        res[i].number = i + 1;
-        $scope.items.push(res[i]);
-      }
-      console.log($scope.items);
-    });
+    function getData() {
+      Top10.getFood().then(function(res) {
+        if (res != "noInternet") {
+          $scope.noInternet = false;
+          for (var i = 0; i < res.length; i++) {
+            res[i].number = i + 1;
+            $scope.items.push(res[i]);
+          }
+        } else {
+          $scope.noInternet = true;
+        }
+      });
+    }
+
+    getData();
+
+    $scope.reconnect = function() {
+      getData();
+    };
 
   })
 
   .controller('topBeverageCtrl', function($scope, $state, Top10, $ionicPopup) {
 
+    $scope.noInternet = false;
     $scope.items = [];
 
-    Top10.getBeverage().then(function(res) {
-      for (var i = 0; i < res.length; i++) {
-        res[i].number = i + 1;
-        $scope.items.push(res[i]);
-      }
-      console.log($scope.items);
-    });
+    function getData() {
+      Top10.getBeverage().then(function(res) {
+        if (res != "noInternet") {
+          $scope.noInternet = false;
+          for (var i = 0; i < res.length; i++) {
+            res[i].number = i + 1;
+            $scope.items.push(res[i]);
+          }
+        } else {
+          $scope.noInternet = true;
+        }
+      });
+    }
+
+    getData();
+
+    $scope.reconnect = function() {
+      getData();
+    };
 
   })
 
-  .controller('favouriteCtrl', function($scope, $state, $ionicPopup, Favourite, $rootScope) {
+  .controller('favouriteCtrl', function($scope, $state, $ionicPopup, Favourite, $rootScope, Connection) {
 
     $scope.items = [];
     $scope.dataSend = {};
@@ -1181,12 +1267,16 @@ angular.module('starter.controllers', [])
       }
     }
 
-    Favourite.get(localStorage.getItem('accountId')).then(function(res) {
-      for (var i = 0; i < res.length; i++) {
-        $scope.items.push(res[i]);
-      }
-      console.log($scope.items);
-    });
+    function getData() {
+      Favourite.get(localStorage.getItem('accountId')).then(function(res) {
+        for (var i = 0; i < res.length; i++) {
+          $scope.items.push(res[i]);
+        }
+        console.log($scope.items);
+      });
+    }
+
+    getData();
 
     $scope.init = function(itemId, index) {
       var FavItems = localStorage.getItem("favouriteItemsID").split(',');
@@ -1257,7 +1347,10 @@ angular.module('starter.controllers', [])
     };
 
     $scope.doRefresh = function() {
-      refresh();
+      var haveInternet = Connection.checkInterentWithPopup();
+      if (haveInternet) {
+        refresh();
+      }
       $scope.$broadcast('scroll.refreshComplete');
     };
 
@@ -1285,18 +1378,22 @@ angular.module('starter.controllers', [])
       });
     }
 
-    MyHistory.getOrders(localStorage.getItem('accountId')).then(function(res) {
-      console.log(res);
-      if (res != 'Empty') {
-        for (var i = 0; i < res.length; i++) {
-          $scope.orders.push(res[i]);
+    function getData() {
+      MyHistory.getOrders(localStorage.getItem('accountId')).then(function(res) {
+        console.log(res);
+        if (res != 'Empty') {
+          for (var i = 0; i < res.length; i++) {
+            $scope.orders.push(res[i]);
+          }
+        } else {
+          $timeout(function() {
+            showBanner('info', 'vertical');
+          }, 250);
         }
-      } else {
-        $timeout(function() {
-          showBanner('info', 'vertical');
-        }, 250);
-      }
-    });
+      });
+    }
+
+    getData();
 
     $scope.checkStatus = function(status) {
       if (status == "Delivered" || status == "Collected") {
@@ -1315,26 +1412,30 @@ angular.module('starter.controllers', [])
     $scope.items = [];
     $scope.qrCodePin = "";
 
-    MyHistory.getOrderItems(id).then(function(res) {
-      console.log(res);
-      $scope.ordTotal = parseFloat(res[0].total).toFixed(2);
-      $scope.ordDiscount = parseFloat(res[0].discount).toFixed(2);
-      $scope.ordGST = parseFloat(res[0].GST).toFixed(2);
-      $scope.ordNetTotal = parseFloat(res[0].netTotal).toFixed(2);
-      $scope.orderType = res[0].orderType;
-      $scope.preorderDateTime = moment(res[0].preorderDateTime).format('DD-MMM-YYYY h:mm:ss A');
-      $scope.tableNumber = res[0].tableNumber;
-      $scope.orderDateTime = moment(res[0].orderDateTime).format('DD-MMM-YYYY h:mm:ss A');
-      $scope.transNo = res[0].transNo;
-      $scope.PIN = res[0].PIN.toString();
-      $scope.comboMessage = res[0].comboMessage;
+    function getData() {
+      MyHistory.getOrderItems(id).then(function(res) {
+        console.log(res);
+        $scope.ordTotal = parseFloat(res[0].total).toFixed(2);
+        $scope.ordDiscount = parseFloat(res[0].discount).toFixed(2);
+        $scope.ordGST = parseFloat(res[0].GST).toFixed(2);
+        $scope.ordNetTotal = parseFloat(res[0].netTotal).toFixed(2);
+        $scope.orderType = res[0].orderType;
+        $scope.preorderDateTime = moment(res[0].preorderDateTime).format('DD-MMM-YYYY h:mm:ss A');
+        $scope.tableNumber = res[0].tableNumber;
+        $scope.orderDateTime = moment(res[0].orderDateTime).format('DD-MMM-YYYY h:mm:ss A');
+        $scope.transNo = res[0].transNo;
+        $scope.PIN = res[0].PIN.toString();
+        $scope.comboMessage = res[0].comboMessage;
 
-      for (var i = 0; i < res.length; i++) {
-        res[i].itemPrice = parseFloat(res[i].itemPrice).toFixed(2);
-        $scope.items.push(res[i]);
-      }
-      console.log("Order item Id: " + id);
-    });
+        for (var i = 0; i < res.length; i++) {
+          res[i].itemPrice = parseFloat(res[i].itemPrice).toFixed(2);
+          $scope.items.push(res[i]);
+        }
+        console.log("Order item Id: " + id);
+      });
+    }
+
+    getData();
 
     $scope.openQrCodeModal = function() {
       $ionicModal.fromTemplateUrl('templates/qrCode.html', {
@@ -1364,7 +1465,7 @@ angular.module('starter.controllers', [])
 
   })
 
-  .controller('myAccountCtrl', function($scope, $state, $ionicSideMenuDelegate, Account, $ionicModal, $ionicPopup, md5, salt) {
+  .controller('myAccountCtrl', function($scope, $state, $ionicSideMenuDelegate, Account, $ionicModal, $ionicPopup, md5, salt, Connection) {
 
     $scope.Password = {};
     $scope.dataSend = {};
@@ -1390,9 +1491,13 @@ angular.module('starter.controllers', [])
       });
     }
 
-    Account.get(localStorage.getItem('accountId')).then(function(response) {
-      $scope.details = response;
-    });
+    function getData() {
+      Account.get(localStorage.getItem('accountId')).then(function(response) {
+        $scope.details = response;
+      });
+    }
+
+    getData();
 
     $ionicModal.fromTemplateUrl('templates/changePassword.html', {
       scope: $scope,
@@ -1422,31 +1527,34 @@ angular.module('starter.controllers', [])
     });
 
     $scope.changePassword = function(acc, form) {
-      $scope.dataSend.custID = localStorage.getItem("accountId");
-      $scope.dataSend.custPassword = md5.createHash($scope.Password.new + salt);
-      $scope.dataSend.token = localStorage.getItem("accessToken");
-      var currentPassordHash = md5.createHash($scope.Password.current + salt);
-      Account.checkCurrentPassword($scope.dataSend.custID, currentPassordHash).then(function(res) {
-        if (res.message != 'unsuccessful') {
-          Account.changePassword($scope.dataSend).then(function(response) {
-            if (form) {
-              $scope.Password = {};
-              form.$setPristine();
-              form.$setUntouched();
-            }
-            popupSuccessReset();
-          });
-        } else {
-          popupInvalidCurrent();
-        }
-      });
+      var haveInternet = Connection.checkInterentWithPopup();
+      if (haveInternet) {
+        $scope.dataSend.custID = localStorage.getItem("accountId");
+        $scope.dataSend.custPassword = md5.createHash($scope.Password.new + salt);
+        $scope.dataSend.token = localStorage.getItem("accessToken");
+        var currentPassordHash = md5.createHash($scope.Password.current + salt);
+        Account.checkCurrentPassword($scope.dataSend.custID, currentPassordHash).then(function(res) {
+          if (res.message != 'unsuccessful') {
+            Account.changePassword($scope.dataSend).then(function(response) {
+              if (form) {
+                $scope.Password = {};
+                form.$setPristine();
+                form.$setUntouched();
+              }
+              popupSuccessReset();
+            });
+          } else {
+            popupInvalidCurrent();
+          }
+        });
+      }
     };
 
   })
 
   .controller('contactCtrl', function($scope, $state, CafeInfo) {
-    $scope.noInternet = false;
 
+    $scope.noInternet = false;
 
     function initialize() {
       // set up begining position
@@ -1471,6 +1579,7 @@ angular.module('starter.controllers', [])
     function getData() {
       CafeInfo.getContact().then(function(res) {
         if (res != "noInternet") {
+          $scope.noInternet = false;
           $scope.contact = {};
           for (var i = 0; i < res.length; i++) {
             if (res[i].contactType == "Phone") {
@@ -1485,8 +1594,6 @@ angular.module('starter.controllers', [])
               $scope.contact.twitter = res[i].contactSource;
             }
           }
-          console.log($scope.contact);
-          $scope.noInternet = false;
         } else {
           $scope.noInternet = true;
         }
@@ -1512,106 +1619,125 @@ angular.module('starter.controllers', [])
 
   .controller('aboutCtrl', function($scope, $state, $stateParams, CafeInfo, moment) {
 
-    CafeInfo.get().then(function(res) {
-      var day;
-      var id;
-      var holidayMessage;
-      var isHoliday = false;
-      $scope.cafeInfos = res;
-      $scope.todayRemark = "No Remarks";
-      // check today's day
-      switch (moment().day()) {
-        case 1:
-          day = "Monday";
-          id = 0;
-          break;
-        case 2:
-          day = "Tuesday";
-          id = 1;
-          break;
-        case 3:
-          day = "Wednesday";
-          id = 2;
-          break;
-        case 4:
-          day = "Thursday";
-          id = 3;
-          break;
-        case 5:
-          day = "Friday";
-          id = 4;
-          break;
-        default:
-          id = -1;
-      }
+    $scope.noInternet = false;
 
-      CafeInfo.getHoliday().then(function(res) {
-
-        var a = moment();
-        for (var i = 0; i < res.length; i++) {
-          var from = new Date(res[i].DateFrom);
-          var to = new Date(res[i].DateTo);
-          to.setDate(to.getDate() + 1);
-          var withinHoliday = moment(a).isBetween(from, to);
-          console.log("Is within Holiday: " + withinHoliday);
-          if (withinHoliday) {
-            isHoliday = true;
-            holidayMessage = res[i].Message;
-            break;
-          } else {
-            isHoliday = false;
+    function getData() {
+      CafeInfo.get().then(function(res) {
+        if (res != "noInternet") {
+          $scope.noInternet = false;
+          var day;
+          var id;
+          var holidayMessage;
+          var isHoliday = false;
+          $scope.cafeInfos = res;
+          $scope.todayRemark = "No Remarks";
+          // check today's day
+          switch (moment().day()) {
+            case 1:
+              day = "Monday";
+              id = 0;
+              break;
+            case 2:
+              day = "Tuesday";
+              id = 1;
+              break;
+            case 3:
+              day = "Wednesday";
+              id = 2;
+              break;
+            case 4:
+              day = "Thursday";
+              id = 3;
+              break;
+            case 5:
+              day = "Friday";
+              id = 4;
+              break;
+            default:
+              id = -1;
           }
-        }
-        console.log(res);
-      }).then(function() {
-        if (isHoliday) {
-          $scope.status = 'Closed';
-          $scope.todayRemark = "It's " + holidayMessage + "!";
-        } else {
-          // get today's remarks
-          if (id != -1) {
-            $scope.todayRemark = res[id].remarks;
-            $scope.todayDay = day;
-            // split opening hours by ":" delimeters
-            var todayOpeningHours = res[id].openinghours;
-            var arrayOfSplitsOpen = todayOpeningHours.split(/(:)/);
-            var hrOpen = arrayOfSplitsOpen[0];
-            var minOpen = arrayOfSplitsOpen[2];
 
-            // split closing hours by ":" delimeters
-            var todayOpeningHours = res[id].closinghours;
-            var arrayOfSplitsClose = todayOpeningHours.split(/(:)/);
-            var hrClose = arrayOfSplitsClose[0];
-            var minClose = arrayOfSplitsClose[2];
-
-            // check between time
-            var d = moment();
-            var afterTime = moment().hour(hrOpen).minutes(minOpen);
-            var beforeTime = moment().hour(hrClose).minutes(minClose);
-
-            var thirtyMinutesFromNow = moment().hour(hrClose).minutes(minClose).subtract(1800, 'seconds');
-            console.log("Is within an hour before closing: " + moment(d).isBetween(thirtyMinutesFromNow, beforeTime));
-            console.log("Is between time: " + moment(d).isBetween(afterTime, beforeTime));
-
-            if (moment(d).isBetween(afterTime, beforeTime)) {
-              if (moment(d).isBetween(thirtyMinutesFromNow, beforeTime)) {
-                $scope.status = 'ClosingSoon';
-              } else {
-                $scope.status = 'Open';
+          CafeInfo.getHoliday().then(function(res) {
+            if (res != "noInternet") {
+              $scope.noInternet = false;
+              var a = moment();
+              for (var i = 0; i < res.length; i++) {
+                var from = new Date(res[i].DateFrom);
+                var to = new Date(res[i].DateTo);
+                to.setDate(to.getDate() + 1);
+                var withinHoliday = moment(a).isBetween(from, to);
+                console.log("Is within Holiday: " + withinHoliday);
+                if (withinHoliday) {
+                  isHoliday = true;
+                  holidayMessage = res[i].Message;
+                  break;
+                } else {
+                  isHoliday = false;
+                }
               }
+              console.log(res);
             } else {
-              $scope.status = 'Closed';
+              $scope.noInternet = true;
             }
-          } else {
-            $scope.status = 'Closed';
-          }
+          }).then(function() {
+            if (isHoliday) {
+              $scope.status = 'Closed';
+              $scope.todayRemark = "It's " + holidayMessage + "!";
+            } else {
+              // get today's remarks
+              if (id != -1) {
+                $scope.todayRemark = res[id].remarks;
+                $scope.todayDay = day;
+                // split opening hours by ":" delimeters
+                var todayOpeningHours = res[id].openinghours;
+                var arrayOfSplitsOpen = todayOpeningHours.split(/(:)/);
+                var hrOpen = arrayOfSplitsOpen[0];
+                var minOpen = arrayOfSplitsOpen[2];
+
+                // split closing hours by ":" delimeters
+                var todayOpeningHours = res[id].closinghours;
+                var arrayOfSplitsClose = todayOpeningHours.split(/(:)/);
+                var hrClose = arrayOfSplitsClose[0];
+                var minClose = arrayOfSplitsClose[2];
+
+                // check between time
+                var d = moment();
+                var afterTime = moment().hour(hrOpen).minutes(minOpen);
+                var beforeTime = moment().hour(hrClose).minutes(minClose);
+
+                var thirtyMinutesFromNow = moment().hour(hrClose).minutes(minClose).subtract(1800, 'seconds');
+                console.log("Is within an hour before closing: " + moment(d).isBetween(thirtyMinutesFromNow, beforeTime));
+                console.log("Is between time: " + moment(d).isBetween(afterTime, beforeTime));
+
+                if (moment(d).isBetween(afterTime, beforeTime)) {
+                  if (moment(d).isBetween(thirtyMinutesFromNow, beforeTime)) {
+                    $scope.status = 'ClosingSoon';
+                  } else {
+                    $scope.status = 'Open';
+                  }
+                } else {
+                  $scope.status = 'Closed';
+                }
+              } else {
+                $scope.status = 'Closed';
+              }
+            }
+          });
+        } else {
+          $scope.noInternet = true;
         }
       });
-    });
+    }
+
+    getData();
+
+    $scope.reconnect = function() {
+      getData();
+    };
 
   })
 
-  .controller('dineInCtrl', function($scope, $state, $cordovaBarcodeScanner, Cart, $ionicModal, $ionicPopup, $rootScope, CafeInfo, moment, $q, $ionicScrollDelegate) {
+  .controller('dineInCtrl', function($scope, $state, $cordovaBarcodeScanner, Cart, $ionicModal, $ionicPopup, $rootScope, CafeInfo, moment, $q, $ionicScrollDelegate, Connection) {
 
     function cafeIsOpen() {
       var deferred = $q.defer();
@@ -1787,10 +1913,6 @@ angular.module('starter.controllers', [])
       // Execute action
     });
 
-    CafeInfo.get().then(function(res) {
-      $scope.cafeInfos = res;
-    });
-
     $scope.checkScroll = function() {
       var currentTop = $ionicScrollDelegate.$getByHandle('scroller').getScrollPosition().top;
       var maxTop = $ionicScrollDelegate.$getByHandle('scroller').getScrollView().__maxScrollTop;
@@ -1807,59 +1929,65 @@ angular.module('starter.controllers', [])
     };
 
     $scope.scan = function() {
-      cafeIsOpen().then(function(res) {
-        console.log(res);
-        if (res == "Open") {
-          $cordovaBarcodeScanner
-            .scan()
-            .then(function(barcodeData) {
-              Cart.setDineIn(barcodeData.text);
-              popupScanSucess(barcodeData.text);
-            }, function(error) {
-              console.log(error);
-            });
-        } else if (res == "WithinFifteenMinutesBeforeClose") {
-          popupUpNoService();
-        } else if (res == "Closed") {
-          popupCafeClose();
-        }
-      });
+      var haveInternet = Connection.checkInterentWithPopup();
+      if (haveInternet) {
+        cafeIsOpen().then(function(res) {
+          console.log(res);
+          if (res == "Open") {
+            $cordovaBarcodeScanner
+              .scan()
+              .then(function(barcodeData) {
+                Cart.setDineIn(barcodeData.text);
+                popupScanSucess(barcodeData.text);
+              }, function(error) {
+                console.log(error);
+              });
+          } else if (res == "WithinFifteenMinutesBeforeClose") {
+            popupUpNoService();
+          } else if (res == "Closed") {
+            popupCafeClose();
+          }
+        });
+      }
     };
 
     $scope.enterTableNum = function() {
-      cafeIsOpen().then(function(res) {
-        console.log(res);
-        if (res == "Open") {
-          $scope.data = {};
-          $ionicPopup.show({
-            templateUrl: 'templates/tableNumber.html',
-            title: 'Enter your table number',
-            scope: $scope,
-            buttons: [{
-              text: 'Cancel'
-            }, {
-              text: '<b>Okay</b>',
-              type: 'button-royal',
-              onTap: function(e) {
-                if (!$scope.data.tempTable) {
-                  e.preventDefault();
-                } else {
-                  return $scope.data.tempTable;
+      var haveInternet = Connection.checkInterentWithPopup();
+      if (haveInternet) {
+        cafeIsOpen().then(function(res) {
+          console.log(res);
+          if (res == "Open") {
+            $scope.data = {};
+            $ionicPopup.show({
+              templateUrl: 'templates/tableNumber.html',
+              title: 'Enter your table number',
+              scope: $scope,
+              buttons: [{
+                text: 'Cancel'
+              }, {
+                text: '<b>Okay</b>',
+                type: 'button-royal',
+                onTap: function(e) {
+                  if (!$scope.data.tempTable) {
+                    e.preventDefault();
+                  } else {
+                    return $scope.data.tempTable;
+                  }
                 }
+              }, ]
+            }).then(function(res) {
+              if (res != undefined) {
+                Cart.setDineIn(res);
+                popupScanSucess(res);
               }
-            }, ]
-          }).then(function(res) {
-            if (res != undefined) {
-              Cart.setDineIn(res);
-              popupScanSucess(res);
-            }
-          });
-        } else if (res == "WithinFifteenMinutesBeforeClose") {
-          popupUpNoService();
-        } else if (res == "Closed") {
-          popupCafeClose();
-        }
-      });
+            });
+          } else if (res == "WithinFifteenMinutesBeforeClose") {
+            popupUpNoService();
+          } else if (res == "Closed") {
+            popupCafeClose();
+          }
+        });
+      }
     };
 
     $scope.$on('$ionicView.enter', function() {
@@ -1868,7 +1996,7 @@ angular.module('starter.controllers', [])
 
   })
 
-  .controller('preOrderCtrl', function($scope, $state, $rootScope, Cart, $ionicModal, $ionicPopup, CafeInfo, $q, $ionicScrollDelegate) {
+  .controller('preOrderCtrl', function($scope, $state, $rootScope, Cart, $ionicModal, $ionicPopup, CafeInfo, $q, $ionicScrollDelegate, Connection) {
 
     var coeff = 1000 * 60 * 5;
     var date = new Date();
@@ -2096,10 +2224,6 @@ angular.module('starter.controllers', [])
       // Execute action
     });
 
-    CafeInfo.get().then(function(res) {
-      $scope.cafeInfos = res;
-    });
-
     $scope.checkScroll = function() {
       var currentTop = $ionicScrollDelegate.$getByHandle('scroller').getScrollPosition().top;
       var maxTop = $ionicScrollDelegate.$getByHandle('scroller').getScrollView().__maxScrollTop;
@@ -2116,30 +2240,33 @@ angular.module('starter.controllers', [])
     };
 
     $scope.continue = function() {
-      var dt = moment($scope.preorder.value).format('YYYY-MM-DD HH:mm:ss');
-      cafeIsOpen(dt).then(function(res) {
-        console.log(res);
-        if (res == "Open") {
-          Cart.setPreorder(dt);
-          console.log("Pre-order dateTime: " + dt);
-          if (localStorage.getItem("accountId") == "") {
-            $rootScope.payment = "true";
-            $state.go('login');
-          } else {
-            $state.go('payment');
+      var haveInternet = Connection.checkInterentWithPopup();
+      if (haveInternet) {
+        var dt = moment($scope.preorder.value).format('YYYY-MM-DD HH:mm:ss');
+        cafeIsOpen(dt).then(function(res) {
+          console.log(res);
+          if (res == "Open") {
+            Cart.setPreorder(dt);
+            console.log("Pre-order dateTime: " + dt);
+            if (localStorage.getItem("accountId") == "") {
+              $rootScope.payment = "true";
+              $state.go('login');
+            } else {
+              $state.go('payment');
+            }
+          } else if (res == "BeforeNow") {
+            popupTimePassed();
+          } else if (res == "FifteenMinutesAfterNow") {
+            popupNeedPreparation();
+          } else if (res == "WithinFifteenMinutesBeforeClose") {
+            popupUpNoService();
+          } else if (res == "WithinFifteenMinutesAfterOpen") {
+            popupNoEarlyPreOrder();
+          } else if (res == "Closed") {
+            popupCafeClose();
           }
-        } else if (res == "BeforeNow") {
-          popupTimePassed();
-        } else if (res == "FifteenMinutesAfterNow") {
-          popupNeedPreparation();
-        } else if (res == "WithinFifteenMinutesBeforeClose") {
-          popupUpNoService();
-        } else if (res == "WithinFifteenMinutesAfterOpen") {
-          popupNoEarlyPreOrder();
-        } else if (res == "Closed") {
-          popupCafeClose();
-        }
-      });
+        });
+      }
     };
 
     $scope.$on('$ionicView.enter', function() {
@@ -2148,7 +2275,7 @@ angular.module('starter.controllers', [])
 
   })
 
-  .controller('paymentCtrl', function($scope, $rootScope, $state, $ionicPopup, $ionicLoading, Cart, Account, $ionicModal) {
+  .controller('paymentCtrl', function($scope, $rootScope, $state, $ionicPopup, $ionicLoading, Cart, Account, $ionicModal, Connection) {
 
     $scope.pin = "";
     var cart = Cart.get();
@@ -2202,14 +2329,18 @@ angular.module('starter.controllers', [])
       });
     }
 
-    Account.get(localStorage.getItem("accountId")).then(function(res) {
-      $scope.paymentForm = {
-        reference: 'CC843154841254',
-        name: res.custFullName,
-        identifier: 'CC6541564531641321',
-        amount: '$' + cart.total
-      };
-    });
+    function getData() {
+      Account.get(localStorage.getItem("accountId")).then(function(res) {
+        $scope.paymentForm = {
+          reference: 'CC843154841254',
+          name: res.custFullName,
+          identifier: 'CC6541564531641321',
+          amount: '$' + cart.total
+        };
+      });
+    }
+
+    getData();
 
     $ionicModal.fromTemplateUrl('templates/pin.html', {
       scope: $scope,
@@ -2240,7 +2371,10 @@ angular.module('starter.controllers', [])
     });
 
     $scope.pay = function() {
-      load();
+      var haveInternet = Connection.checkInterentWithPopup();
+      if (haveInternet) {
+        load();
+      }
     };
 
   });
