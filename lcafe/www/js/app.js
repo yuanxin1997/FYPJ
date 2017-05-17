@@ -37,7 +37,7 @@ var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.serv
       }
     });
     $stateProvider.state('app.foodItem', {
-      url: '/item/:id',
+      url: '/item/:id:itemName',
       views: {
         'tab-home': {
           templateUrl: 'templates/item.html',
@@ -47,7 +47,7 @@ var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.serv
       }
     });
     $stateProvider.state('app.beverageItem', {
-      url: '/item/:id',
+      url: '/item/:id:itemName',
       views: {
         'tab-beverage': {
           templateUrl: 'templates/item.html',
@@ -57,7 +57,7 @@ var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.serv
       }
     });
     $stateProvider.state('app.specialItem', {
-      url: '/item/:id',
+      url: '/item/:id:itemName',
       views: {
         'tab-special': {
           templateUrl: 'templates/item.html',
@@ -93,7 +93,7 @@ var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.serv
       }
     });
     $stateProvider.state('top10.foodItem', {
-      url: '/item/:id',
+      url: '/item/:id:itemName',
       views: {
         'top10Tab-food': {
           templateUrl: 'templates/item.html',
@@ -103,7 +103,7 @@ var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.serv
       }
     });
     $stateProvider.state('top10.beverageItem', {
-      url: '/item/:id',
+      url: '/item/:id:itemName',
       views: {
         'top10Tab-beverage': {
           templateUrl: 'templates/item.html',
@@ -113,7 +113,7 @@ var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.serv
       }
     });
     $stateProvider.state('item', {
-      url: '/item/:id',
+      url: '/item/:id:itemName',
       templateUrl: 'templates/item.html',
       controller: 'itemCtrl',
       cache: false
@@ -220,7 +220,7 @@ var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.serv
     $ionicConfigProvider.tabs.style('striped');
     $ionicConfigProvider.tabs.position('top');
   })
-  .run(function($ionicPlatform, $rootScope, Initialize, Cart) {
+  .run(function($ionicPlatform, $rootScope, Initialize, Cart, Connection) {
 
     //localStorage.clear();
 
@@ -231,12 +231,13 @@ var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.serv
 
     // initialize accountId and favourite
     Initialize.init();
-    // check token if it is stored in localDB
-    Initialize.token();
+
+    $rootScope.initializing = true;
 
     // run ionic platform
     $ionicPlatform.ready(function() {
       // check if logged in
+      $rootScope.$broadcast('initializeComplete');
       if (localStorage.getItem("accountId") == null || localStorage.getItem("accountId") == '') {
         $rootScope.menuState = "notlogin"
       } else {

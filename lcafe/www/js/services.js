@@ -1,5 +1,6 @@
 angular.module('starter.services', [])
-  .constant('APIurl', 'http://172.20.129.181/WebServiceLCafe3/')
+  .constant('APIurl', 'http://acerobot.sit.nyp.edu.sg/WebServiceLCafe1/')
+  .constant('Emailurl', 'http://acerobot.sit.nyp.edu.sg/LCafeEmailServices/')
   .constant('Accesskey', 'W7djP08dGhXqld1g3RXpz')
   .directive('errSrc', function() {
     return {
@@ -189,7 +190,7 @@ app.factory('Items', function($http, APIurl) {
   };
 });
 
-app.factory('Account', function($http, Cart, APIurl) {
+app.factory('Account', function($http, Cart, APIurl, Emailurl, $q, Connection, LatestUpdate, Initialize) {
   return {
     login: function(username, password) {
       var url = APIurl + 'WebserviceCafe.asmx/login';
@@ -232,16 +233,47 @@ app.factory('Account', function($http, Cart, APIurl) {
       return $http.post(url, a);
     },
     get: function(id) {
-      var url = APIurl + 'WebserviceCafe.asmx/retrieveAccountById?';
+      var deferred = $q.defer();
+      var haveInternet = Connection.checkInternet();
+      var account = localStorage.getItem('Cache::account');
+      if (haveInternet) {
+        Initialize.token().then(function(res) {
+          console.log(res);
+          var url = APIurl + 'WebserviceCafe.asmx/retrieveAccountById?';
+          return $http({
+            method: 'GET',
+            url: url + "token=" + localStorage.getItem("accessToken") + "&id=" + id,
+            dataType: "json",
+            contentType: "application/json; charset=utf-8"
+          }).then(function successCallback(response) {
+            localStorage.setItem('Cache::account', JSON.stringify(response.data));
+            console.log("using web service");
+            deferred.resolve(response.data);
+          }, function errorCallback(response) {
+            deferred.resolve(response.data);
+          });
+        });
+      } else {
+        if (account == null) {
+          deferred.resolve("noInternet");
+        } else {
+          console.log("using cache");
+          deferred.resolve(JSON.parse(account));
+        }
+      }
+      return deferred.promise;
+    },
+    getByEmail: function(email) {
+      var url = APIurl + "WebserviceCafe.asmx/retrieveAccountByEmail?";
       return $http({
         method: 'GET',
-        url: url + "token=" + localStorage.getItem("accessToken") + "&id=" + id,
+        url: url + "email=" + email + "&token=" + localStorage.getItem("accessToken"),
         dataType: "json",
         contentType: "application/json; charset=utf-8"
       }).then(function successCallback(response) {
         return response.data;
       }, function errorCallback(response) {
-        return response.data;
+        return response.data
       });
     },
     checkDuplicateEmail: function(email) {
@@ -304,6 +336,32 @@ app.factory('Account', function($http, Cart, APIurl) {
     changePassword: function(a) {
       var url = APIurl + 'WebserviceCafe.asmx/resetPassword';
       return $http.post(url, a);
+    },
+    sendVerification: function(acc) {
+      var url = Emailurl + 'EmailServices.asmx/SendEmailVerification?';
+      return $http({
+        method: 'GET',
+        url: url + "email=" + acc.custEmail + "&name=" + acc.custFullName + "&confirmCode=" + acc.confirmCode,
+        dataType: "json",
+        contentType: "application/json; charset=utf-8"
+      }).then(function successCallback(response) {
+        return response.data;
+      }, function errorCallback(response) {
+        return response.data;
+      });
+    },
+    sendRecoverLink: function(acc) {
+      var url = Emailurl + 'EmailServices.asmx/SendTemporaryPassword?';
+      return $http({
+        method: 'GET',
+        url: url + "email=" + acc.custEmail + "&name=" + acc.custFullName + "&custID=" + acc.custID.toString(),
+        dataType: "json",
+        contentType: "application/json; charset=utf-8"
+      }).then(function successCallback(response) {
+        return response.data;
+      }, function errorCallback(response) {
+        return response.data;
+      });
     }
   };
 });
@@ -439,7 +497,8 @@ app.factory('CafeInfo', function($http, APIurl, $q, Connection, LatestUpdate, In
   };
 });
 
-app.factory('Cart', function($http, moment, APIurl, $q, Promotions) {
+app.factory('Cart', function($http, moment, APIurl, $q, Promotions, Connection) {
+
   var cartObject = {
     discount: 0.0,
     GST: 0.0,
@@ -452,7 +511,6 @@ app.factory('Cart', function($http, moment, APIurl, $q, Promotions) {
     items: [],
     comboMessage: []
   };
-
   var cart = JSON.parse(localStorage.getItem('cartItems'));
 
   if (cart == null) {
@@ -699,27 +757,33 @@ app.factory('Cart', function($http, moment, APIurl, $q, Promotions) {
   }
 
   function performCalculation() {
-    if (cart.items.length > 0) {
-      calculateDiscount().then(function(res1) {
-        console.log(res1);
-        return calculateNetTotal()
-      }).then(function(res2) {
-        console.log(res2);
-        return calculateGST();;
-      }).then(function(res3) {
-        console.log(res3);
-        return calculateTotal();
-      }).then(function(res4) {
-        console.log(res4);
-      });
-    } else {
-      clear();
+    var haveInternet = Connection.checkInternetWithPopup();
+    if (haveInternet) {
+      if (cart.items.length > 0) {
+        calculateDiscount().then(function(res1) {
+          console.log(res1);
+          return calculateNetTotal()
+        }).then(function(res2) {
+          console.log(res2);
+          return calculateGST();;
+        }).then(function(res3) {
+          console.log(res3);
+          return calculateTotal();
+        }).then(function(res4) {
+          console.log(res4);
+        });
+      } else {
+        clear();
+      }
     }
   }
 
   return {
     get: function() {
       performCalculation();
+      return cart;
+    },
+    getOnly: function() {
       return cart;
     },
     create: function(c) {
@@ -796,20 +860,38 @@ app.factory('Feedback', function($http, APIurl) {
   };
 });
 
-app.factory('MyHistory', function($http, Cart, APIurl) {
+app.factory('MyHistory', function($http, Cart, APIurl, $q, Connection, LatestUpdate, Initialize) {
   return {
     getOrders: function(custId) {
-      var url = APIurl + "WebserviceCafe.asmx/retrieveOrderList?";
-      return $http({
-        method: 'GET',
-        url: url + "token=" + localStorage.getItem("accessToken") + "&custID=" + custId,
-        dataType: "json",
-        contentType: "application/json; charset=utf-8"
-      }).then(function successCallback(response) {
-        return response.data;
-      }, function errorCallback() {
-        return response.data;
-      });
+      var deferred = $q.defer();
+      var haveInternet = Connection.checkInternet();
+      var history = localStorage.getItem('Cache::history');
+      if (haveInternet) {
+        Initialize.token().then(function(res) {
+          console.log(res);
+          var url = APIurl + "WebserviceCafe.asmx/retrieveOrderList?";
+          return $http({
+            method: 'GET',
+            url: url + "token=" + localStorage.getItem("accessToken") + "&custID=" + custId,
+            dataType: "json",
+            contentType: "application/json; charset=utf-8"
+          }).then(function successCallback(response) {
+            localStorage.setItem('Cache::history', JSON.stringify(response.data));
+            console.log("using web service");
+            deferred.resolve(response.data);
+          }, function errorCallback(response) {
+            deferred.resolve(response.data);
+          });
+        });
+      } else {
+        if (history == null) {
+          deferred.resolve("noInternet");
+        } else {
+          console.log("using cache");
+          deferred.resolve(JSON.parse(history));
+        }
+      }
+      return deferred.promise;
     },
     getOrderItems: function(orderId) {
       var url = APIurl + "WebserviceCafe.asmx/retrieveOrderItemList?";
@@ -898,18 +980,6 @@ app.factory('Promotions', function($http, APIurl, $q, Connection, LatestUpdate, 
         return response.data;
       });
     }
-    // emailTest: function() {
-    //   return $http({
-    //     method: 'GET',
-    //     url: "http://172.20.129.181/LCafeEmailServices/EmailServices.asmx/SendEmailVerification?email=yuanxintaxon@gmail.com&name=jane&confirmCode=dwafwafwa",
-    //     dataType: "json",
-    //     contentType: "application/json; charset=utf-8"
-    //   }).then(function successCallback(response) {
-    //     return response.data;
-    //   }, function errorCallback(response) {
-    //     return response.data;
-    //   });
-    // }
   };
 });
 
@@ -1002,24 +1072,42 @@ app.factory('Top10', function($http, APIurl, $q, Connection, LatestUpdate, Initi
   };
 });
 
-app.factory('Favourite', function($http, APIurl) {
+app.factory('Favourite', function($http, APIurl, $q, Connection, LatestUpdate, Initialize) {
   return {
     updateFavourites: function(f) {
       var url = APIurl + 'WebserviceCafe.asmx/updateFavourites';
       return $http.post(url, f);
     },
     get: function(id) {
-      var url = APIurl + "WebserviceCafe.asmx/retrieveFav?";
-      return $http({
-        method: 'GET',
-        url: url + "custID=" + id + "&token=" + localStorage.getItem("accessToken"),
-        dataType: "json",
-        contentType: "application/json; charset=utf-8"
-      }).then(function successCallback(response) {
-        return response.data;
-      }, function errorCallback(response) {
-        return response.data;
-      });
+      var deferred = $q.defer();
+      var haveInternet = Connection.checkInternet();
+      var favourite = localStorage.getItem('Cache::favourite');
+      if (haveInternet) {
+        Initialize.token().then(function(res) {
+          console.log(res);
+          var url = APIurl + "WebserviceCafe.asmx/retrieveFav?";
+          return $http({
+            method: 'GET',
+            url: url + "custID=" + id + "&token=" + localStorage.getItem("accessToken"),
+            dataType: "json",
+            contentType: "application/json; charset=utf-8"
+          }).then(function successCallback(response) {
+            localStorage.setItem('Cache::favourite', JSON.stringify(response.data));
+            console.log("using web service");
+            deferred.resolve(response.data);
+          }, function errorCallback(response) {
+            deferred.resolve(response.data);
+          });
+        });
+      } else {
+        if (favourite == null) {
+          deferred.resolve("noInternet");
+        } else {
+          console.log("using cache");
+          deferred.resolve(JSON.parse(favourite));
+        }
+      }
+      return deferred.promise;
     }
   };
 });
@@ -1055,7 +1143,8 @@ app.factory('Token', function($http, APIurl, Accesskey) {
   };
 });
 
-app.factory('Connection', function($ionicPopup, ) {
+app.factory('Connection', function($ionicPopup) {
+
   function popupCheckInternet() {
     $ionicPopup.alert({
       title: 'No connection found',
@@ -1065,6 +1154,8 @@ app.factory('Connection', function($ionicPopup, ) {
       console.log('No connection found');
     });
   }
+
+
   return {
     checkInternet: function() {
       var haveInternet = true;
@@ -1079,7 +1170,7 @@ app.factory('Connection', function($ionicPopup, ) {
 
       return haveInternet;
     },
-    checkInterentWithPopup: function() {
+    checkInternetWithPopup: function() {
       var haveInternet = true;
       if (window.cordova) {
         if (window.Connection) {
@@ -1093,7 +1184,7 @@ app.factory('Connection', function($ionicPopup, ) {
 
       return haveInternet;
     }
-  }
+  };
 });
 
 app.factory('LatestUpdate', function($http, APIurl, Accesskey) {
@@ -1111,7 +1202,7 @@ app.factory('LatestUpdate', function($http, APIurl, Accesskey) {
         return response.data;
       });
     }
-  }
+  };
 });
 
 app.factory('Initialize', function($http, APIurl, Accesskey, Token, $q) {
@@ -1179,5 +1270,5 @@ app.factory('Initialize', function($http, APIurl, Accesskey, Token, $q) {
       }
       return deferred.promise;
     }
-  }
+  };
 });

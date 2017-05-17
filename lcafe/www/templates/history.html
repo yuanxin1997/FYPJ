@@ -1,19 +1,27 @@
 <ion-view view-title="History">
   <ion-nav-title class="dark">History</ion-nav-title>
-  <ion-content class="light-bg">
-    <ion-list>
 
-      <ion-item class="item-avatar" ng-repeat="order in orders | orderBy:'-orderID'" ui-sref="orderDetails({id: order.orderID})">
-        <img ng-if="order.orderType == 'Dine-In'" ng-src="img/DineIn.jpg" />
-        <img ng-if="order.orderType == 'Pre-Order'" ng-src="img/Preorder.jpg" />
-        <p class="hFont0"><b>Trans No: {{ order.transNo }}</b></p>
-        <p class="pull-left hFont1"><b><span am-time-Ago="order.orderDateTime"></span></b></p>
-        <div class="hFont3" >
-          <p ng-class="checkStatus(order.status)">{{ order.status }}</p>
-          <p class="">${{ order.total | number : 2}}</p>
-        </div>
-      </ion-item>
+  <div ng-if="!noInternet">
+    <ion-content class="light-bg">
+      <ion-list>
 
-    </ion-list>
-  </ion-content>
+        <ion-item class="item-avatar" ng-repeat="order in orders | orderBy:'-orderID' track by (orderID + $index)" ui-sref="orderDetails({id: order.orderID})">
+          <img ng-if="order.orderType == 'Dine-In'" ng-src="img/DineIn.jpg" />
+          <img ng-if="order.orderType == 'Pre-Order'" ng-src="img/Preorder.jpg" />
+          <p class="hFont0"><b>Trans No: {{ order.transNo }}</b></p>
+          <p class="pull-left hFont1"><b><span am-time-Ago="order.orderDateTime"></span></b></p>
+          <div class="hFont3">
+            <p ng-class="checkStatus(order.status)">{{ order.status }}</p>
+            <p class="">${{ order.total | number : 2}}</p>
+          </div>
+        </ion-item>
+
+      </ion-list>
+    </ion-content>
+  </div>
+
+  <div ng-if="noInternet">
+    <div ng-include="'templates/noWifi.html'"></div>
+  </div>
+
 </ion-view>

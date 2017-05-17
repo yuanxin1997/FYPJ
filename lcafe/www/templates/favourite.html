@@ -1,22 +1,27 @@
 <ion-view view-title="Favourite">
   <ion-nav-title class="dark">Favourite</ion-nav-title>
-  <ion-content class="light-bg">
-    <ion-refresher
-        pulling-text="Pull to refresh..."
-        on-refresh="doRefresh()">
+  <div ng-if="!noInternet">
+    <ion-content class="light-bg">
+      <ion-refresher pulling-text="Pull to refresh..." on-refresh="doRefresh()">
       </ion-refresher>
-    <ion-list>
+      <ion-list>
 
-        <div class="item item-thumbnail-left item-text-wrap" ng-repeat="item in items" ng-init="init(item.itemID,$index)" >
-            <img ng-src="http://172.20.129.181/LCafe_Menu_Images/{{ item.itemImg }}" alt="" />
-            <span class="fFont2">{{ item.itemName }}</span>
-            <p class="fFont0">${{ item.itemPrice | number : 2}}</p>
-            <a ui-sref="item({id: item.itemID})" class="favButton"></a>
-            <a ng-if="checkFav(item.itemID)" class="ion-android-favorite fFont1" ng-click="setFavFalse(item.itemID,$index)"></a>
-            <a ng-if="!checkFav(item.itemID)" class="ion-android-favorite-outline fFont1" ng-click="setFavTrue(item.itemID,$index)"></a>
+        <div class="item item-thumbnail-left item-text-wrap" ng-repeat="item in items track by (itemID + $index)" ng-init="init(item.itemID,$index)">
+          <img ng-src="http://172.20.129.181/LCafe_Menu_Images/{{ item.itemImg }}" alt="" />
+          <span class="fFont2">{{ item.itemName }}</span>
+          <p class="fFont0">${{ item.itemPrice | number : 2}}</p>
+          <a ui-sref="item({id: item.itemID, itemName: item.itemName})" class="favButton"></a>
+          <a ng-if="checkFav(item.itemID)" class="ion-android-favorite fFont1" ng-click="setFavFalse(item.itemID,$index)"></a>
+          <a ng-if="!checkFav(item.itemID)" class="ion-android-favorite-outline fFont1" ng-click="setFavTrue(item.itemID,$index)"></a>
         </div>
 
-    </ion-list>
+      </ion-list>
 
-  </ion-content>
+    </ion-content>
+  </div>
+
+  <div ng-if="noInternet">
+    <div ng-include="'templates/noWifi.html'"></div>
+  </div>
+
 </ion-view>

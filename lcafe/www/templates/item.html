@@ -1,66 +1,74 @@
-<ion-view view-title="{{ item.itemName }}">
-  <ion-nav-title class="dark">{{ item.itemName }}</ion-nav-title>
-  <ion-content class="light-bg">
-    <!-- Item cover -->
-    <div class="item-cover">
-      <img class="full-image" ng-src="http://172.20.129.181/LCafe_Menu_Images/{{ item.itemImg }}" err-src="http://placehold.it/250x250" alt="" />
-      <div class="fav">
-        <a ng-if="!isFavourite && menuState=='login'" class="ion-android-favorite-outline" ng-click="setFavTrue(item.itemID)"></a>
-        <a ng-if="isFavourite && menuState=='login'" class="ion-android-favorite" ng-click="setFavFalse(item.itemID)"></a>
-      </div>
-      <div class="overlay">
-        <span class="pull-left royal">
+<ion-view view-title="{{ itemName }}">
+  <ion-nav-title class="dark">{{ itemName }}</ion-nav-title>
+
+  <div ng-if="!noInternet">
+    <ion-content class="light-bg">
+      <!-- Item cover -->
+      <div class="item-cover">
+        <img class="full-image" ng-src="http://172.20.129.181/LCafe_Menu_Images/{{ item.itemImg }}" err-src="http://placehold.it/250x250" alt="" />
+        <div class="fav">
+          <a ng-if="!isFavourite && menuState=='login'" class="ion-android-favorite-outline" ng-click="setFavTrue(item.itemID)"></a>
+          <a ng-if="isFavourite && menuState=='login'" class="ion-android-favorite" ng-click="setFavFalse(item.itemID)"></a>
+        </div>
+        <div class="overlay">
+          <span class="pull-left royal">
           <b>{{ item.itemDesc }}</b>
         </span>
-        <span ng-if="item.itemQty>0" class="pull-right price royal">
+          <span ng-if="item.itemQty>0" class="pull-right price royal">
           ${{ item.itemPrice | number : 2 }}
         </span>
-        <span ng-if="item.itemQty==0 || item.itemStatus=='Unavailable'" class="pull-right price assertive">
+          <span ng-if="item.itemQty==0 || item.itemStatus=='Unavailable'" class="pull-right price assertive">
           <b>Out of Stock!</b>
         </span>
+        </div>
       </div>
-    </div>
-    <ion-list>
-      <ion-item class="item-divider">
-        Quantity
-      </ion-item>
-      <ion-item>
-        <div class="quantityRow row">
-          <div class="col">
-            <span ng-disabled="input.quantity < 2" class="pull-left button button-royal button-card button-qty" ng-click="minusQty(item)">
+      <ion-list>
+        <ion-item class="item-divider">
+          Quantity
+        </ion-item>
+        <ion-item>
+          <div class="quantityRow row">
+            <div class="col">
+              <span ng-disabled="input.quantity < 2" class="pull-left button button-royal button-card button-qty" ng-click="minusQty(item)">
           <i class="ion-minus"></i>
         </span>
-          </div>
+            </div>
 
-          <div class="col col-50" id="center-div">
-            <span class="button-card">
+            <div class="col col-50" id="center-div">
+              <span class="button-card">
           <b>{{ input.quantity }}</b>
         </span>
-          </div>
+            </div>
 
-          <div class="col">
-            <span ng-disabled="input.quantity == item.itemQty || item.itemStatus=='Unavailable'" class="pull-right button button-royal button-card button-qty" ng-click="plusQty(item)">
+            <div class="col">
+              <span ng-disabled="input.quantity == item.itemQty || item.itemStatus=='Unavailable'" class="pull-right button button-royal button-card button-qty" ng-click="plusQty(item)">
           <i class="ion-plus"></i>
         </span>
+            </div>
           </div>
-        </div>
-      </ion-item>
-      <div ng-hide="chkItemRequest == 'None'">
-        <ion-item class="item-divider">
-          Item Request
         </ion-item>
-        <ion-checkbox ng-repeat="itemRequest in itemRequests" ng-disabled="item.itemQty==0 || item.itemStatus=='Unavailable'" class="item-checkbox-right checkbox-royal" ng-change="changeItem(itemRequest)" ng-model="itemRequest.checked" ng-checked="itemRequest.checked">
-          {{ itemRequest.text }}
-        </ion-checkbox>
-      </div>
+        <div ng-hide="chkItemRequest == 'None'">
+          <ion-item class="item-divider">
+            Item Request
+          </ion-item>
+          <ion-checkbox ng-repeat="itemRequest in itemRequests" ng-disabled="item.itemQty==0 || item.itemStatus=='Unavailable'" class="item-checkbox-right checkbox-royal" ng-change="changeItem(itemRequest)" ng-model="itemRequest.checked" ng-checked="itemRequest.checked">
+            {{ itemRequest.text }}
+          </ion-checkbox>
+        </div>
 
-    </ion-list>
-    <!-- Buttons -->
-    <div class="row item-button-group">
-      <div ng-disabled="item.itemQty==0 || item.itemStatus=='Unavailable'" class="col button button-royal" ng-click="addCart()">
-        <i class="text-2x ion-android-cart"></i>
-        <span class="text-sm">ADD TO CART</span>
+      </ion-list>
+      <!-- Buttons -->
+      <div class="row item-button-group">
+        <div ng-disabled="item.itemQty==0 || item.itemStatus=='Unavailable'" class="col button button-royal" ng-click="addCart()">
+          <i class="text-2x ion-android-cart"></i>
+          <span class="text-sm">ADD TO CART</span>
+        </div>
       </div>
-    </div>
-  </ion-content>
+    </ion-content>
+  </div>
+
+  <div ng-if="noInternet">
+    <div ng-include="'templates/noWifi.html'"></div>
+  </div>
+
 </ion-view>

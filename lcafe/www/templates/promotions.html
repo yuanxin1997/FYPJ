@@ -5,7 +5,7 @@
     <ion-content class="light-bg promotion-page" scroll="false">
       <ion-slides options="options" slider="data.slider">
         <ion-slide-page ng-repeat="item in list">
-          <img ng-src="http://172.20.129.181/LCafe_Menu_Images/{{item.promoImg}}" alt="{{promoDesc}}" />
+          <img ng-src="http://acerobot.sit.nyp.edu.sg/LCafe_Menu_Images/{{item.promoImg}}" alt="{{promoDesc}}" />
         </ion-slide-page>
         <ion-slide-page ng-if="hasPromo(list.length)">
           <img ng-src="img/nopromo.png" />

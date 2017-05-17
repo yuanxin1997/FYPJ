@@ -1,37 +1,37 @@
 <ion-view view-title="Cart">
   <ion-nav-title class="dark">Cart</ion-nav-title>
-  <ion-content>
-
-    <ion-list>
-      <ion-item class="item-thumbnail-left card" id="cart-card" ng-repeat="item in cart.items">
-        <img ng-src="http://172.20.129.181/LCafe_Menu_Images/{{ item.itemImg }}" alt=""/>
-        <h2>{{ item.itemName }}</h2>
-        <div>
-          <h2 class="price pull-left royal">
+  <div ng-if="!noInternet">
+    <ion-content>
+      <ion-list>
+        <ion-item class="item-thumbnail-left card" id="cart-card" ng-repeat="item in cart.items">
+          <img ng-src="http://acerobot.sit.nyp.edu.sg/LCafe_Menu_Images/{{ item.itemImg }}" alt="" />
+          <h2>{{ item.itemName }}</h2>
+          <div>
+            <h2 class="price pull-left royal">
             ${{ item.itemPrice | number : 2}}
             <span class="dark">x
               {{ item.quantity }}</span>
           </h2>
-          <div ng-disabled="item.quantity == item.itemQty" class="pull-right button button-royal button-card button-qty" ng-click="plusQty(item)">
-            <i class="ion-plus"></i>
+            <div ng-disabled="item.quantity == item.itemQty" class="pull-right button button-royal button-card button-qty" ng-click="plusQty(item)">
+              <i class="ion-plus"></i>
+            </div>
+            <div ng-disabled="item.quantity < 2" class="pull-right button button-royal button-card button-qty" ng-click="minusQty(item)">
+              <i class="ion-minus"></i>
+            </div>
+            <div class="separatePackaging" ng-if="item.separatePackaging=='Yes'">Separate Packaging*</div>
           </div>
-          <div ng-disabled="item.quantity < 2" class="pull-right button button-royal button-card button-qty" ng-click="minusQty(item)">
-            <i class="ion-minus"></i>
-          </div>
-          <div class="separatePackaging" ng-if="item.separatePackaging=='Yes'">Separate Packaging*</div>
-        </div>
-        <ion-option-button class="assertive-bg" ng-click="remove(item.itemID)">
-          <i class="icon ion-trash-a padding light"></i>
-        </ion-option-button>
-      </ion-item>
+          <ion-option-button class="assertive-bg" ng-click="remove(item.itemID)">
+            <i class="icon ion-trash-a padding light"></i>
+          </ion-option-button>
+        </ion-item>
 
-      <ion-item class="card" id="cart-bottom-card" ng-show="!cartEmpty()">
-        <span class="list">
+        <ion-item class="card" id="cart-bottom-card" ng-show="!cartEmpty()">
+          <span class="list">
 
           <span class="item" ng-if="cart.discount > 0">
             Discount:
               <span class="pull-right">${{cart.discount}}</span>
-              <h1 class="comboMsg" ng-repeat="comboMsg in cart.comboMessage" ng-click="openModal(comboMsg.comboType)">- <span class="comboMsgColor">{{comboMsg.comboType === 'combo3' ? '1 FOR 1' : comboMsg.comboType}}</span> x {{comboMsg.comboQty}}</h1>
+          <h1 class="comboMsg" ng-repeat="comboMsg in cart.comboMessage" ng-click="openModal(comboMsg.comboType)">- <span class="comboMsgColor">{{comboMsg.comboType === 'combo3' ? '1 FOR 1' : comboMsg.comboType}}</span> x {{comboMsg.comboQty}}</h1>
           </span>
 
           <span class="item">
@@ -46,13 +46,12 @@
 
           <span class="item">
             <b>Total:<span class="pull-right">${{cart.total}}</span>
-            </b>
+          </b>
           </span>
 
-        </span>
-      </ion-item>
-    </ion-list>
-
+          </span>
+        </ion-item>
+      </ion-list>
     </ion-content>
     <ion-footer-bar>
       <div class="row item-button-group">
@@ -60,4 +59,10 @@
         <button class="col button button-royal" ng-if="cartEmpty()" ui-sref='app.food'>YOUR CART IS EMPTY</button>
       </div>
     </ion-footer-bar>
-  </ion-view>
+  </div>
+
+  <div ng-if="noInternet">
+    <div ng-include="'templates/noWifi.html'"></div>
+  </div>
+
+</ion-view>

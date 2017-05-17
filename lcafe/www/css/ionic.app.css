@@ -10180,15 +10180,19 @@ a {
   border-top: 3px solid #79A70A; }
 
 .row .col img {
-  width: 50%;
-  height: 100%; }
+  width: 40%;
+  margin: 0;
+  position: relative;
+  top: 50%;
+  left: 25%;
+  transform: translate(-50%, -50%); }
 
 .row .col .middlePin {
   text-align: center;
   margin: auto;
   width: 100%;
   border: 3px solid #DAA520;
-  padding: 10px;
+  padding: 0.2em;
   font-size: 2.0em; }
 
 .row .col .middleText {
@@ -10506,10 +10510,10 @@ p.info {
     font-size: 1.5em;
     font-weight: 400; }
 
-.feedbackCustompopup .popup {
+.feedbackCustomPopup .popup {
   width: 80%; }
 
-.feedbackCustompopup .popup-buttons .button {
+.feedbackCustomPopup .popup-buttons .button {
   font-size: 1.0em; }
 
 .fsView {

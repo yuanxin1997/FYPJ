@@ -10,7 +10,7 @@ angular.module('starter.controllers', [])
     function popupLoginFail() {
       $ionicPopup.alert({
         title: 'Login Fail',
-        subTitle: 'Invalid Email or Password.',
+        subTitle: 'Invalid email or password.',
         okType: 'button-royal'
       }).then(function(res) {
         console.log("Login Fail");
@@ -30,7 +30,7 @@ angular.module('starter.controllers', [])
     function popupSuccessSignUp() {
       $ionicPopup.alert({
         title: 'Sign Up Sucesssful',
-        subTitle: 'You may now procceed to login.',
+        subTitle: 'Please verify your email before logging in.',
         okType: 'button-royal'
       }).then(function(res) {
         $state.go('login');
@@ -40,11 +40,11 @@ angular.module('starter.controllers', [])
 
     function popupEmailNotFound() {
       $ionicPopup.alert({
-        title: 'Email not found',
+        title: 'Email Not Found',
         subTitle: 'This email does not exists in our record.',
         okType: 'button-royal'
       }).then(function(res) {
-        console.log('Eamil not found');
+        console.log('Eamil Not Found');
       });
     }
 
@@ -75,7 +75,7 @@ angular.module('starter.controllers', [])
     }
 
     $scope.createAcc = function(acc, form) {
-      var haveInternet = Connection.checkInterentWithPopup();
+      var haveInternet = Connection.checkInternetWithPopup();
       if (haveInternet) {
         $scope.dataSend.fullname = $scope.Account.fullname;
         $scope.dataSend.email = $scope.Account.email;
@@ -85,12 +85,18 @@ angular.module('starter.controllers', [])
         Account.checkDuplicateEmail(acc.email).then(function(res) {
           if (res.message != 'unsuccessful') {
             Account.create($scope.dataSend).then(function(res) {
-              if (form) {
-                $scope.Account = {};
-                form.$setPristine();
-                form.$setUntouched();
-              }
-              popupSuccessSignUp();
+              Account.getByEmail(acc.email).then(function(newAccount) {
+                console.log(newAccount);
+                Account.sendVerification(newAccount).then(function(response) {
+                  console.log(response);
+                  if (form) {
+                    $scope.Account = {};
+                    form.$setPristine();
+                    form.$setUntouched();
+                  }
+                  popupSuccessSignUp();
+                })
+              })
             });
           } else {
             popupEmailTaken();
@@ -100,7 +106,7 @@ angular.module('starter.controllers', [])
     };
 
     $scope.login = function(l, form) {
-      var haveInternet = Connection.checkInterentWithPopup();
+      var haveInternet = Connection.checkInternetWithPopup();
       if (haveInternet) {
         var passwordHash = md5.createHash(l.password + salt);
         Account.checkTempPassword(l.email).then(function(res) {
@@ -148,18 +154,19 @@ angular.module('starter.controllers', [])
     };
 
     $scope.requestLink = function(req, form) {
-      var haveInternet = Connection.checkInterentWithPopup();
+      var haveInternet = Connection.checkInternetWithPopup();
       if (haveInternet) {
         Account.checkEmail(req.email).then(function(res) {
           if (res.message != 'unsuccessful') {
-            // Account.create($scope.dataSend).then(function(res) {
-            if (form) {
-              $scope.Account = {};
-              form.$setPristine();
-              form.$setUntouched();
-            }
-            popupSucessRequest();
-            // });
+            Account.sendRecoverLink(res).then(function(response) {
+              console.log(response);
+              if (form) {
+                $scope.Account = {};
+                form.$setPristine();
+                form.$setUntouched();
+              }
+              popupSucessRequest();
+            });
           } else {
             popupEmailNotFound();
           }
@@ -168,7 +175,7 @@ angular.module('starter.controllers', [])
     };
 
     $scope.changePassword = function(Password, form) {
-      var haveInternet = Connection.checkInterentWithPopup();
+      var haveInternet = Connection.checkInternetWithPopup();
       if (haveInternet) {
         $scope.dataSend2.custID = localStorage.getItem("accountId");
         $scope.dataSend2.custPassword = md5.createHash(Password.new + salt);
@@ -189,6 +196,7 @@ angular.module('starter.controllers', [])
   .controller('homeCtrl', function($scope, $state, Menu, Cart, $rootScope, $ionicSideMenuDelegate, $ionicModal, $rootScope, $filter, $cordovaNetwork, $ionicPlatform, $ionicPopup, $timeout) {
 
     document.addEventListener("deviceready", function() {
+
       // listen for Online event
       $rootScope.$on('$cordovaNetwork:online', function(event, networkState) {
         if ($rootScope.internetConnected == true) return;
@@ -208,8 +216,8 @@ angular.module('starter.controllers', [])
 
     }, false);
 
-
-    $scope.cart = Cart.get();
+    $scope.noInternet = false;
+    $scope.cart = Cart.getOnly();
     $scope.sort = {
       value: 'itemSubCategory'
     };
@@ -239,23 +247,41 @@ angular.module('starter.controllers', [])
 
     function getData() {
       Menu.getFood().then(function(menu) {
-        $scope.foodMenu = menu;
-        for (var i = 0; i < menu.length; i++) {
-          tempArr.push(menu[i].itemSubCategory);
-        }
-        uniqueArr = tempArr.unique();
-        for (var j = 0; j < uniqueArr.length; j++) {
-          var obj = {};
-          obj.text = uniqueArr[j];
-          obj.checked = true;
-          $scope.filterItems.push(obj);
-          $scope.selected.push(uniqueArr[j]);
-          $scope.default.push(uniqueArr[j]);
+        if (menu != "noInternet") {
+          $scope.noInternet = false;
+          $scope.foodMenu = menu;
+          for (var i = 0; i < menu.length; i++) {
+            tempArr.push(menu[i].itemSubCategory);
+          }
+          uniqueArr = tempArr.unique();
+          for (var j = 0; j < uniqueArr.length; j++) {
+            var obj = {};
+            obj.text = uniqueArr[j];
+            obj.checked = true;
+            $scope.filterItems.push(obj);
+            $scope.selected.push(uniqueArr[j]);
+            $scope.default.push(uniqueArr[j]);
+          }
+        } else {
+          $scope.noInternet = true;
         }
       });
     }
 
-    getData();
+    $rootScope.$on('initializeComplete', function(event, data) {
+      if (!$rootScope.initializing) {
+        getData();
+      }
+      $rootScope.initializing = false;
+    });
+
+    if (!$rootScope.initializing) {
+      getData();
+    }
+
+    $scope.reconnect = function() {
+      getData();
+    };
 
     $scope.customFilter = function(item) {
       return ($scope.selected.indexOf(item.itemSubCategory) !== -1);
@@ -276,8 +302,12 @@ angular.module('starter.controllers', [])
     $rootScope.logout = function() {
       localStorage.setItem('accountId', '');
       localStorage.setItem('favouriteItemsID', '');
+      localStorage.removeItem('Cache::account');
+      localStorage.removeItem('Cache::history');
+      localStorage.removeItem('Cache::favourite');
       Cart.setCustId('');
       $rootScope.menuState = "notlogin";
+      delete
       console.log("Your id: " + localStorage.getItem("accountId"));
       $ionicSideMenuDelegate.toggleLeft();
     };
@@ -302,7 +332,7 @@ angular.module('starter.controllers', [])
     };
 
     $scope.$on('$destroy', function() {
-
+      // Execute action
     });
 
     $scope.$on('modal.hidden', function() {
@@ -336,7 +366,7 @@ angular.module('starter.controllers', [])
     };
 
     $scope.$on('$destroy', function() {
-
+      // Execute action
     });
 
     $scope.$on('modal.hidden', function() {
@@ -361,6 +391,7 @@ angular.module('starter.controllers', [])
 
   .controller('beverageCtrl', function($scope, $state, Menu, $rootScope, $ionicModal, $filter) {
 
+    $scope.noInternet = false;
     $scope.sort = {
       value: 'itemSubCategory'
     };
@@ -390,23 +421,32 @@ angular.module('starter.controllers', [])
 
     function getData() {
       Menu.getBeverage().then(function(menu) {
-        $scope.drinkMenu = menu;
-        for (var i = 0; i < menu.length; i++) {
-          tempArr.push(menu[i].itemSubCategory);
-        }
-        uniqueArr = tempArr.unique();
-        for (var j = 0; j < uniqueArr.length; j++) {
-          var obj = {};
-          obj.text = uniqueArr[j];
-          obj.checked = true;
-          $scope.filterItems.push(obj);
-          $scope.selected.push(uniqueArr[j]);
-          $scope.default.push(uniqueArr[j]);
+        if (menu != "noInternet") {
+          $scope.noInternet = false;
+          $scope.drinkMenu = menu;
+          for (var i = 0; i < menu.length; i++) {
+            tempArr.push(menu[i].itemSubCategory);
+          }
+          uniqueArr = tempArr.unique();
+          for (var j = 0; j < uniqueArr.length; j++) {
+            var obj = {};
+            obj.text = uniqueArr[j];
+            obj.checked = true;
+            $scope.filterItems.push(obj);
+            $scope.selected.push(uniqueArr[j]);
+            $scope.default.push(uniqueArr[j]);
+          }
+        } else {
+          $scope.noInternet = true;
         }
       });
     }
 
     getData();
+
+    $scope.reconnect = function() {
+      getData();
+    };
 
     $scope.customFilter = function(item) {
       return ($scope.selected.indexOf(item.itemSubCategory) !== -1);
@@ -444,7 +484,7 @@ angular.module('starter.controllers', [])
     };
 
     $scope.$on('$destroy', function() {
-
+      // Execute action
     });
 
     $scope.$on('modal.hidden', function() {
@@ -478,7 +518,7 @@ angular.module('starter.controllers', [])
     };
 
     $scope.$on('$destroy', function() {
-
+      // Execute action
     });
 
     $scope.$on('modal.hidden', function() {
@@ -503,6 +543,7 @@ angular.module('starter.controllers', [])
 
   .controller('specialCtrl', function($scope, $state, Menu, $rootScope, $ionicModal, $timeout, $filter) {
 
+    $scope.noInternet = false;
     $scope.sort = {
       value: 'itemSubCategory'
     };
@@ -532,23 +573,32 @@ angular.module('starter.controllers', [])
 
     function getData() {
       Menu.getSpecial().then(function(menu) {
-        $scope.specialMenu = menu;
-        for (var i = 0; i < menu.length; i++) {
-          tempArr.push(menu[i].itemSubCategory);
-        }
-        uniqueArr = tempArr.unique();
-        for (var j = 0; j < uniqueArr.length; j++) {
-          var obj = {};
-          obj.text = uniqueArr[j];
-          obj.checked = true;
-          $scope.filterItems.push(obj);
-          $scope.selected.push(uniqueArr[j]);
-          $scope.default.push(uniqueArr[j]);
+        if (menu != "noInternet") {
+          $scope.noInternet = false;
+          $scope.specialMenu = menu;
+          for (var i = 0; i < menu.length; i++) {
+            tempArr.push(menu[i].itemSubCategory);
+          }
+          uniqueArr = tempArr.unique();
+          for (var j = 0; j < uniqueArr.length; j++) {
+            var obj = {};
+            obj.text = uniqueArr[j];
+            obj.checked = true;
+            $scope.filterItems.push(obj);
+            $scope.selected.push(uniqueArr[j]);
+            $scope.default.push(uniqueArr[j]);
+          }
+        } else {
+          $scope.noInternet = true;
         }
       });
     }
 
     getData();
+
+    $scope.reconnect = function() {
+      getData();
+    };
 
     $scope.customFilter = function(item) {
       return ($scope.selected.indexOf(item.itemSubCategory) !== -1);
@@ -594,7 +644,7 @@ angular.module('starter.controllers', [])
     };
 
     $scope.$on('$destroy', function() {
-
+      // Execute action
     });
 
     $scope.$on('modal.hidden', function() {
@@ -628,7 +678,7 @@ angular.module('starter.controllers', [])
     };
 
     $scope.$on('$destroy', function() {
-
+      // Execute action
     });
 
     $scope.$on('modal.hidden', function() {
@@ -653,7 +703,10 @@ angular.module('starter.controllers', [])
 
   .controller('itemCtrl', function($scope, $state, Items, Cart, $stateParams, $ionicPopup, $timeout, $ionicHistory, Favourite, $rootScope, $filter, Connection) {
 
+    $scope.noInternet = false;
     var id = $stateParams.id;
+    console.log($stateParams.itemName);
+    $scope.itemName = ($stateParams.itemName);
     var itemToCart;
     var quantitySelected;
     $scope.itemRequests = [];
@@ -676,15 +729,15 @@ angular.module('starter.controllers', [])
 
     function showUpdatedAlert() {
       $ionicPopup.alert({
-        title: 'Item updated',
-        template: '<p class="dark">You have updated this item.</b>',
+        title: 'Item Updated',
+        template: 'You have updated this item.',
         buttons: [{
           text: 'Ok',
           type: 'button-royal'
         }]
       }).then(function(res) {
         $ionicHistory.goBack();
-        console.log("Item updated");
+        console.log("Item Updated");
       });
     }
 
@@ -727,7 +780,7 @@ angular.module('starter.controllers', [])
     function showAddedAlert() {
       $ionicPopup.alert({
         title: 'Success',
-        template: '<p class="dark">Item successfully added to cart.</p>',
+        template: 'Item successfully added to cart.',
         buttons: [{
           text: 'Ok',
           type: 'button-royal'
@@ -739,28 +792,42 @@ angular.module('starter.controllers', [])
       });
     }
 
-    Items.getItem(id).then(function(response) {
-      console.log("Item id: " + id);
-      var allItemRequests = response.itemRequest.split(';');
-      $scope.chkItemRequest = allItemRequests[0];
-      for (var i = 0; i < allItemRequests.length - 1; i++) {
-        var obj = {};
-        obj.text = allItemRequests[i];
-        obj.checked = false;
-        $scope.itemRequests.push(obj);
-      }
-      itemToCart = angular.copy(response);
-      $scope.item = response;
-      checkFav(id);
-      if (itemToCart.itemQty == 0 || itemToCart.itemStatus == 'Unavailable') {
-        quantitySelected = 0;
+    function getData() {
+      var haveInternet = Connection.checkInternet();
+      if (haveInternet) {
+        $scope.noInternet = false;
+        Items.getItem(id).then(function(response) {
+          console.log("Item id: " + id);
+          var allItemRequests = response.itemRequest.split(';');
+          $scope.chkItemRequest = allItemRequests[0];
+          for (var i = 0; i < allItemRequests.length - 1; i++) {
+            var obj = {};
+            obj.text = allItemRequests[i];
+            obj.checked = false;
+            $scope.itemRequests.push(obj);
+          }
+          itemToCart = angular.copy(response);
+          $scope.item = response;
+          checkFav(id);
+          if (itemToCart.itemQty == 0 || itemToCart.itemStatus == 'Unavailable') {
+            quantitySelected = 0;
+          } else {
+            quantitySelected = 1;
+          }
+        }).then(function(response) {
+          $scope.input.quantity = quantitySelected;
+          $scope.input.separatePackaging = "";
+        });
       } else {
-        quantitySelected = 1;
+        $scope.noInternet = true;
       }
-    }).then(function(response) {
-      $scope.input.quantity = quantitySelected;
-      $scope.input.separatePackaging = "";
-    });
+    }
+
+    getData();
+
+    $scope.reconnect = function() {
+      getData();
+    };
 
     $scope.changeItem = function(item) {
       for (var i = 0; i < $scope.itemRequests.length; i++) {
@@ -782,64 +849,79 @@ angular.module('starter.controllers', [])
     };
 
     $scope.plusQty = function(item) {
-      console.log("+");
-      quantitySelected++;
-      $scope.input.quantity = quantitySelected;
-      if ($scope.input.separatePackaging == "") {
-        showSeparatePackaging();
+      var haveInternet = Connection.checkInternetWithPopup();
+      if (haveInternet) {
+        console.log("+");
+        quantitySelected++;
+        $scope.input.quantity = quantitySelected;
+        if ($scope.input.separatePackaging == "") {
+          showSeparatePackaging();
+        }
       }
     };
 
     $scope.minusQty = function(item) {
-      console.log("-");
-      if ($scope.input.quantity == 2) {
-        $scope.input.separatePackaging = "";
-      }
-      if ($scope.input.quantity > 1) {
-        quantitySelected--;
-        $scope.input.quantity = quantitySelected;
+      var haveInternet = Connection.checkInternetWithPopup();
+      if (haveInternet) {
+        console.log("-");
+        if ($scope.input.quantity == 2) {
+          $scope.input.separatePackaging = "";
+        }
+        if ($scope.input.quantity > 1) {
+          quantitySelected--;
+          $scope.input.quantity = quantitySelected;
+        }
       }
     };
 
     $scope.addCart = function() {
-      itemToCart.quantity = $scope.input.quantity;
-      itemToCart.separatePackaging = $scope.input.separatePackaging;
-      if (checked[0] != undefined) {
-        itemToCart.itemRequest = checked[0];
-      } else {
-        itemToCart.itemRequest = "None";
-      }
-      if (Cart.isDuplicate(itemToCart.itemID)) {
-        showDuplicateAlert(itemToCart);
-      } else {
-        Cart.add(itemToCart);
-        console.log("Before item: " + JSON.stringify($scope.item));
-        console.log("After item: " + JSON.stringify(itemToCart));
-        showAddedAlert();
+      var haveInternet = Connection.checkInternetWithPopup();
+      if (haveInternet) {
+        itemToCart.quantity = $scope.input.quantity;
+        itemToCart.separatePackaging = $scope.input.separatePackaging;
+        if (checked[0] != undefined) {
+          itemToCart.itemRequest = checked[0];
+        } else {
+          itemToCart.itemRequest = "None";
+        }
+        if (Cart.isDuplicate(itemToCart.itemID)) {
+          showDuplicateAlert(itemToCart);
+        } else {
+          Cart.add(itemToCart);
+          console.log("Before item: " + JSON.stringify($scope.item));
+          console.log("After item: " + JSON.stringify(itemToCart));
+          showAddedAlert();
+        }
       }
     };
 
     $scope.setFavTrue = function(itemId) {
-      $scope.isFavourite = true;
-      var FavItems = localStorage.getItem("favouriteItemsID");
-      var updateFav = FavItems.concat(itemId + ',');
-      localStorage.setItem("favouriteItemsID", updateFav);
-      console.log(localStorage.getItem("favouriteItemsID"));
-      console.log('set to true');
+      var haveInternet = Connection.checkInternetWithPopup();
+      if (haveInternet) {
+        $scope.isFavourite = true;
+        var FavItems = localStorage.getItem("favouriteItemsID");
+        var updateFav = FavItems.concat(itemId + ',');
+        localStorage.setItem("favouriteItemsID", updateFav);
+        console.log(localStorage.getItem("favouriteItemsID"));
+        console.log('set to true');
+      }
     };
 
     $scope.setFavFalse = function(itemId) {
-      $scope.isFavourite = false;
-      var FavItems = localStorage.getItem("favouriteItemsID").split(/(,)/);
-      for (var i = 0; i < FavItems.length; i = i + 2) {
-        if (FavItems[i] == itemId) {
-          FavItems.splice(i, 2);
-          break;
+      var haveInternet = Connection.checkInternetWithPopup();
+      if (haveInternet) {
+        $scope.isFavourite = false;
+        var FavItems = localStorage.getItem("favouriteItemsID").split(/(,)/);
+        for (var i = 0; i < FavItems.length; i = i + 2) {
+          if (FavItems[i] == itemId) {
+            FavItems.splice(i, 2);
+            break;
+          }
         }
+        localStorage.setItem("favouriteItemsID", FavItems.join(""));
+        console.log(localStorage.getItem("favouriteItemsID"));
+        console.log('set to false');
       }
-      localStorage.setItem("favouriteItemsID", FavItems.join(""));
-      console.log(localStorage.getItem("favouriteItemsID"));
-      console.log('set to false');
     };
 
     $scope.$on('$ionicView.leave', function() {
@@ -899,7 +981,7 @@ angular.module('starter.controllers', [])
     function showPromptForUserRole() {
       $ionicPopup.confirm({
         title: 'Are you from NYP(Staff/Student) or a Guest?',
-        cssClass: 'feedbackCustompopup',
+        cssClass: 'feedbackCustomPopup',
         buttons: [{
             text: 'Guest',
             type: 'positive',
@@ -972,7 +1054,7 @@ angular.module('starter.controllers', [])
     };
 
     $scope.sendFeedback = function(form) {
-      var haveInternet = Connection.checkInterentWithPopup();
+      var haveInternet = Connection.checkInternetWithPopup();
       if (haveInternet) {
         if ($scope.fb.foodVarietyOrSelection == 0 || $scope.fb.foodPrice == 0 || $scope.fb.foodQuality == 0 ||
           $scope.fb.beverageVarietyOrSelection == 0 || $scope.fb.beveragePrice == 0 || $scope.fb.beverageQuality == 0 ||
@@ -992,12 +1074,12 @@ angular.module('starter.controllers', [])
 
   .controller('cartCtrl', function($scope, $rootScope, $state, $ionicPopup, Cart, Promotions, $ionicContentBanner, $timeout, $ionicSideMenuDelegate, $ionicModal, $ionicSlideBoxDelegate, Connection) {
 
+    $scope.noInternet = false;
     var contentBannerInstance;
-    $scope.cart = Cart.get();
 
     function popupOrdTypePrompt() {
       $ionicPopup.show({
-        title: '<b>Confirmation</b>',
+        title: 'Confirmation',
         subTitle: 'Do you want to dine-in or pre-order?',
         scope: $scope,
         buttons: [{
@@ -1051,11 +1133,30 @@ angular.module('starter.controllers', [])
       });
     }
 
-    if ($scope.cart.items.length > 0) {
-      $timeout(function() {
-        showBanner('info', 'vertical');
-      }, 250);
+    function checkCartItems() {
+      if ($scope.cart.items.length > 0) {
+        $timeout(function() {
+          showBanner('info', 'vertical');
+        }, 250);
+      }
     }
+
+    function getData() {
+      var haveInternet = Connection.checkInternet();
+      if (haveInternet) {
+        $scope.noInternet = false;
+        $scope.cart = Cart.get();
+        checkCartItems();
+      } else {
+        $scope.noInternet = true;
+      }
+    }
+
+    getData();
+
+    $scope.reconnect = function() {
+      getData();
+    };
 
     $scope.cartEmpty = function() {
       if ($scope.cart.items.length > 0) {
@@ -1066,28 +1167,37 @@ angular.module('starter.controllers', [])
     };
 
     $scope.plusQty = function(item) {
-      item.quantity++;
-      if (item.separatePackaging == "") {
-        showSeparatePackaging(item);
+      var haveInternet = Connection.checkInternetWithPopup();
+      if (haveInternet) {
+        item.quantity++;
+        if (item.separatePackaging == "") {
+          showSeparatePackaging(item);
+        }
+        Cart.get();
       }
-      Cart.get();
     };
 
     $scope.minusQty = function(item) {
-      if (item.quantity == 2) {
-        showBanner('info', 'vertical');
-        item.separatePackaging = "";
-        Cart.get();
-      }
-      if (item.quantity > 1) {
-        item.quantity--;
-        Cart.get();
+      var haveInternet = Connection.checkInternetWithPopup();
+      if (haveInternet) {
+        if (item.quantity == 2) {
+          showBanner('info', 'vertical');
+          item.separatePackaging = "";
+          Cart.get();
+        }
+        if (item.quantity > 1) {
+          item.quantity--;
+          Cart.get();
+        }
       }
     };
 
     $scope.remove = function(itemID) {
-      Cart.remove(itemID);
-      Cart.get();
+      var haveInternet = Connection.checkInternetWithPopup();
+      if (haveInternet) {
+        Cart.remove(itemID);
+        Cart.get();
+      }
     };
 
     $scope.submitOrder = function() {
@@ -1102,7 +1212,7 @@ angular.module('starter.controllers', [])
     });
 
     $scope.openModal = function(msg) {
-      var haveInternet = Connection.checkInterentWithPopup();
+      var haveInternet = Connection.checkInternetWithPopup();
       if (haveInternet) {
         Promotions.getAll().then(function(res) {
           $scope.list = [];
@@ -1239,11 +1349,26 @@ angular.module('starter.controllers', [])
 
   })
 
-  .controller('favouriteCtrl', function($scope, $state, $ionicPopup, Favourite, $rootScope, Connection) {
+  .controller('favouriteCtrl', function($scope, $state, $ionicPopup, Favourite, $rootScope, $ionicContentBanner, Connection, $timeout) {
 
+    $scope.noInternet = false;
+    var contentBannerInstance;
     $scope.items = [];
     $scope.dataSend = {};
     localStorage.setItem("favIndex", '');
+
+    function showBanner(bannerType, transition) {
+      if (contentBannerInstance) {
+        contentBannerInstance();
+        contentBannerInstance = null;
+      }
+      contentBannerInstance = $ionicContentBanner.show({
+        text: ['You do not have any favourite items.'],
+        autoClose: 2000,
+        type: bannerType,
+        transition: transition || 'vertical'
+      });
+    }
 
     function refresh() {
       if ($rootScope.menuState == 'login') {
@@ -1269,14 +1394,29 @@ angular.module('starter.controllers', [])
 
     function getData() {
       Favourite.get(localStorage.getItem('accountId')).then(function(res) {
-        for (var i = 0; i < res.length; i++) {
-          $scope.items.push(res[i]);
+        console.log(res);
+        if (res != "noInternet") {
+          $scope.noInternet = false;
+          if (res != 'Empty') {
+            for (var i = 0; i < res.length; i++) {
+              $scope.items.push(res[i]);
+            }
+          } else {
+            $timeout(function() {
+              showBanner('info', 'vertical');
+            }, 250);
+          }
+        } else {
+          $scope.noInternet = true;
         }
-        console.log($scope.items);
       });
     }
 
     getData();
+
+    $scope.reconnect = function() {
+      getData();
+    };
 
     $scope.init = function(itemId, index) {
       var FavItems = localStorage.getItem("favouriteItemsID").split(',');
@@ -1313,41 +1453,47 @@ angular.module('starter.controllers', [])
     };
 
     $scope.setFavTrue = function(itemId, index) {
-      var FavItems = localStorage.getItem("favouriteItemsID");
-      var FavIndex = localStorage.getItem("favIndex").split(/(,)/);
-      var updateFav = FavItems.concat(itemId + ',');
-      for (var i = 0; i < FavIndex.length; i = i + 2) {
-        if (FavIndex[i] == index) {
-          FavIndex.splice(i, 2);
-          break;
+      var haveInternet = Connection.checkInternetWithPopup();
+      if (haveInternet) {
+        var FavItems = localStorage.getItem("favouriteItemsID");
+        var FavIndex = localStorage.getItem("favIndex").split(/(,)/);
+        var updateFav = FavItems.concat(itemId + ',');
+        for (var i = 0; i < FavIndex.length; i = i + 2) {
+          if (FavIndex[i] == index) {
+            FavIndex.splice(i, 2);
+            break;
+          }
         }
+        localStorage.setItem("favouriteItemsID", updateFav);
+        localStorage.setItem("favIndex", FavIndex.join(""));
+        console.log('favItem: ' + localStorage.getItem("favouriteItemsID"));
+        console.log('favIndex: ' + localStorage.getItem("favIndex"));
+        console.log('set to true: ' + index);
       }
-      localStorage.setItem("favouriteItemsID", updateFav);
-      localStorage.setItem("favIndex", FavIndex.join(""));
-      console.log('favItem: ' + localStorage.getItem("favouriteItemsID"));
-      console.log('favIndex: ' + localStorage.getItem("favIndex"));
-      console.log('set to true: ' + index);
     };
 
     $scope.setFavFalse = function(itemId, index) {
-      var FavItems = localStorage.getItem("favouriteItemsID").split(/(,)/);
-      var FavIndex = localStorage.getItem("favIndex");
-      var updateIndex = FavIndex.concat(index + ',');
-      for (var i = 0; i < FavItems.length; i = i + 2) {
-        if (FavItems[i] == itemId) {
-          FavItems.splice(i, 2);
-          break;
+      var haveInternet = Connection.checkInternetWithPopup();
+      if (haveInternet) {
+        var FavItems = localStorage.getItem("favouriteItemsID").split(/(,)/);
+        var FavIndex = localStorage.getItem("favIndex");
+        var updateIndex = FavIndex.concat(index + ',');
+        for (var i = 0; i < FavItems.length; i = i + 2) {
+          if (FavItems[i] == itemId) {
+            FavItems.splice(i, 2);
+            break;
+          }
         }
+        localStorage.setItem("favouriteItemsID", FavItems.join(""));
+        localStorage.setItem("favIndex", updateIndex);
+        console.log('favItem: ' + localStorage.getItem("favouriteItemsID"));
+        console.log('favIndex: ' + localStorage.getItem("favIndex"));
+        console.log('set to false: ' + index);
       }
-      localStorage.setItem("favouriteItemsID", FavItems.join(""));
-      localStorage.setItem("favIndex", updateIndex);
-      console.log('favItem: ' + localStorage.getItem("favouriteItemsID"));
-      console.log('favIndex: ' + localStorage.getItem("favIndex"));
-      console.log('set to false: ' + index);
     };
 
     $scope.doRefresh = function() {
-      var haveInternet = Connection.checkInterentWithPopup();
+      var haveInternet = Connection.checkInternetWithPopup();
       if (haveInternet) {
         refresh();
       }
@@ -1355,13 +1501,17 @@ angular.module('starter.controllers', [])
     };
 
     $scope.$on('$ionicView.leave', function() {
-      refresh();
+      var haveInternet = Connection.checkInternet();
+      if (haveInternet) {
+        refresh();
+      }
     });
 
   })
 
-  .controller('historyCtrl', function($scope, $state, $ionicSideMenuDelegate, MyHistory, $ionicContentBanner, $timeout) {
+  .controller('historyCtrl', function($scope, $state, $ionicSideMenuDelegate, MyHistory, $ionicContentBanner, $timeout, Connection) {
 
+    $scope.noInternet = false;
     var contentBannerInstance;
     $scope.orders = [];
 
@@ -1380,20 +1530,28 @@ angular.module('starter.controllers', [])
 
     function getData() {
       MyHistory.getOrders(localStorage.getItem('accountId')).then(function(res) {
-        console.log(res);
-        if (res != 'Empty') {
-          for (var i = 0; i < res.length; i++) {
-            $scope.orders.push(res[i]);
+        if (res != "noInternet") {
+          $scope.noInternet = false;
+          if (res != 'Empty') {
+            for (var i = 0; i < res.length; i++) {
+              $scope.orders.push(res[i]);
+            }
+          } else {
+            $timeout(function() {
+              showBanner('info', 'vertical');
+            }, 250);
           }
         } else {
-          $timeout(function() {
-            showBanner('info', 'vertical');
-          }, 250);
+          $scope.noInternet = true;
         }
       });
     }
 
     getData();
+
+    $scope.reconnect = function() {
+      getData();
+    };
 
     $scope.checkStatus = function(status) {
       if (status == "Delivered" || status == "Collected") {
@@ -1405,37 +1563,48 @@ angular.module('starter.controllers', [])
 
   })
 
-  .controller('ordDetailsCtrl', function($scope, $state, $stateParams, $ionicSideMenuDelegate, MyHistory, $ionicModal) {
+  .controller('ordDetailsCtrl', function($scope, $state, $stateParams, $ionicSideMenuDelegate, MyHistory, $ionicModal, Connection) {
 
+    $scope.noInternet = false;
     var id = $stateParams.id;
     $scope.ordId = id;
     $scope.items = [];
     $scope.qrCodePin = "";
 
     function getData() {
-      MyHistory.getOrderItems(id).then(function(res) {
-        console.log(res);
-        $scope.ordTotal = parseFloat(res[0].total).toFixed(2);
-        $scope.ordDiscount = parseFloat(res[0].discount).toFixed(2);
-        $scope.ordGST = parseFloat(res[0].GST).toFixed(2);
-        $scope.ordNetTotal = parseFloat(res[0].netTotal).toFixed(2);
-        $scope.orderType = res[0].orderType;
-        $scope.preorderDateTime = moment(res[0].preorderDateTime).format('DD-MMM-YYYY h:mm:ss A');
-        $scope.tableNumber = res[0].tableNumber;
-        $scope.orderDateTime = moment(res[0].orderDateTime).format('DD-MMM-YYYY h:mm:ss A');
-        $scope.transNo = res[0].transNo;
-        $scope.PIN = res[0].PIN.toString();
-        $scope.comboMessage = res[0].comboMessage;
+      var haveInternet = Connection.checkInternet();
+      if (haveInternet) {
+        $scope.noInternet = false;
+        MyHistory.getOrderItems(id).then(function(res) {
+          console.log(res);
+          $scope.ordTotal = parseFloat(res[0].total).toFixed(2);
+          $scope.ordDiscount = parseFloat(res[0].discount).toFixed(2);
+          $scope.ordGST = parseFloat(res[0].GST).toFixed(2);
+          $scope.ordNetTotal = parseFloat(res[0].netTotal).toFixed(2);
+          $scope.orderType = res[0].orderType;
+          $scope.preorderDateTime = moment(res[0].preorderDateTime).format('DD-MMM-YYYY h:mm:ss A');
+          $scope.tableNumber = res[0].tableNumber;
+          $scope.orderDateTime = moment(res[0].orderDateTime).format('DD-MMM-YYYY h:mm:ss A');
+          $scope.transNo = res[0].transNo;
+          $scope.PIN = res[0].PIN.toString();
+          $scope.comboMessage = res[0].comboMessage;
 
-        for (var i = 0; i < res.length; i++) {
-          res[i].itemPrice = parseFloat(res[i].itemPrice).toFixed(2);
-          $scope.items.push(res[i]);
-        }
-        console.log("Order item Id: " + id);
-      });
+          for (var i = 0; i < res.length; i++) {
+            res[i].itemPrice = parseFloat(res[i].itemPrice).toFixed(2);
+            $scope.items.push(res[i]);
+          }
+          console.log("Order item Id: " + id);
+        });
+      } else {
+        $scope.noInternet = true;
+      }
     }
 
     getData();
+
+    $scope.reconnect = function() {
+      getData();
+    };
 
     $scope.openQrCodeModal = function() {
       $ionicModal.fromTemplateUrl('templates/qrCode.html', {
@@ -1452,7 +1621,7 @@ angular.module('starter.controllers', [])
     };
 
     $scope.$on('$destroy', function() {
-
+      // Execute action
     });
 
     $scope.$on('modal.hidden', function() {
@@ -1467,6 +1636,7 @@ angular.module('starter.controllers', [])
 
   .controller('myAccountCtrl', function($scope, $state, $ionicSideMenuDelegate, Account, $ionicModal, $ionicPopup, md5, salt, Connection) {
 
+    $scope.noInternet = false;
     $scope.Password = {};
     $scope.dataSend = {};
 
@@ -1492,12 +1662,21 @@ angular.module('starter.controllers', [])
     }
 
     function getData() {
-      Account.get(localStorage.getItem('accountId')).then(function(response) {
-        $scope.details = response;
+      Account.get(localStorage.getItem('accountId')).then(function(res) {
+        if (res != "noInternet") {
+          $scope.noInternet = false;
+          $scope.details = res;
+        } else {
+          $scope.noInternet = true;
+        }
       });
     }
 
     getData();
+
+    $scope.reconnect = function() {
+      getData();
+    };
 
     $ionicModal.fromTemplateUrl('templates/changePassword.html', {
       scope: $scope,
@@ -1527,7 +1706,7 @@ angular.module('starter.controllers', [])
     });
 
     $scope.changePassword = function(acc, form) {
-      var haveInternet = Connection.checkInterentWithPopup();
+      var haveInternet = Connection.checkInternetWithPopup();
       if (haveInternet) {
         $scope.dataSend.custID = localStorage.getItem("accountId");
         $scope.dataSend.custPassword = md5.createHash($scope.Password.new + salt);
@@ -1812,7 +1991,7 @@ angular.module('starter.controllers', [])
               var afterTime = moment().hour(hrOpen).minutes(minOpen);
               var beforeTime = moment().hour(hrClose).minutes(minClose);
 
-              var fifteenMinutesFromNow = moment().hour(hrClose).minutes(minClose).subtract(900, 'seconds');
+              var fifteenMinutesFromNow = moment().hour(hrClose).minutes(minClose).subtract(840, 'seconds');
               console.log("Is within 15 minutes before closing: " + moment(d).isBetween(fifteenMinutesFromNow, beforeTime));
 
               console.log("Is between time: " + moment(d).isBetween(afterTime, beforeTime));
@@ -1929,7 +2108,7 @@ angular.module('starter.controllers', [])
     };
 
     $scope.scan = function() {
-      var haveInternet = Connection.checkInterentWithPopup();
+      var haveInternet = Connection.checkInternetWithPopup();
       if (haveInternet) {
         cafeIsOpen().then(function(res) {
           console.log(res);
@@ -1952,7 +2131,7 @@ angular.module('starter.controllers', [])
     };
 
     $scope.enterTableNum = function() {
-      var haveInternet = Connection.checkInterentWithPopup();
+      var haveInternet = Connection.checkInternetWithPopup();
       if (haveInternet) {
         cafeIsOpen().then(function(res) {
           console.log(res);
@@ -2087,16 +2266,16 @@ angular.module('starter.controllers', [])
               var afterTime = moment().hour(hrOpen).minutes(minOpen);
               var beforeTime = moment().hour(hrClose).minutes(minClose);
 
-              var fifteenMinutesToNow = moment().hour(hrOpen).minutes(minOpen).add(900, 'seconds');
+              var fifteenMinutesToNow = moment().hour(hrOpen).minutes(minOpen).add(840, 'seconds');
               console.log("Is within 15 minutes after opening: " + moment(d).isBetween(afterTime, fifteenMinutesToNow));
 
-              var fifteenMinutesFromNow = moment().hour(hrClose).minutes(minClose).subtract(900, 'seconds');
+              var fifteenMinutesFromNow = moment().hour(hrClose).minutes(minClose).subtract(840, 'seconds');
               console.log("Is within 15 minutes before closing: " + moment(d).isBetween(fifteenMinutesFromNow, beforeTime));
 
               var now = moment();
               console.log("Time has passed: " + moment(c).isBefore(now));
 
-              var fifteenMinutesAfterNow = moment().add(900, 'seconds');
+              var fifteenMinutesAfterNow = moment().add(840, 'seconds');
               console.log("Need 15 minutes to prepare (pre order): " + moment(c).isBefore(fifteenMinutesAfterNow));
 
               console.log("Is between time: " + moment(d).isBetween(afterTime, beforeTime));
@@ -2169,27 +2348,27 @@ angular.module('starter.controllers', [])
 
     function popupNoEarlyPreOrder() {
       $ionicPopup.alert({
-        title: 'No early Pre-order',
+        title: 'No Early Pre-order',
         template: '15 minutes preparation is needed after opening.',
         okType: 'button-royal'
       }).then(function(res) {
-        console.log("No early Pre-order");
+        console.log("No Early Pre-order");
       });
     }
 
     function popupNeedPreparation() {
       $ionicPopup.alert({
-        title: 'Need Early Pre-order',
+        title: 'No Early Pre-order',
         template: '15 minutes preparation is needed before Pre-order',
         okType: 'button-royal'
       }).then(function(res) {
-        console.log("No early Pre-order");
+        console.log("No Early Pre-order");
       });
     }
 
     function popupTimePassed() {
       $ionicPopup.alert({
-        title: 'Selected tlected time have passed',
+        title: 'Selected time have passed',
         template: 'Please select time that is after current time.',
         okType: 'button-royal'
       }).then(function(res) {
@@ -2240,7 +2419,7 @@ angular.module('starter.controllers', [])
     };
 
     $scope.continue = function() {
-      var haveInternet = Connection.checkInterentWithPopup();
+      var haveInternet = Connection.checkInternetWithPopup();
       if (haveInternet) {
         var dt = moment($scope.preorder.value).format('YYYY-MM-DD HH:mm:ss');
         cafeIsOpen(dt).then(function(res) {
@@ -2277,13 +2456,14 @@ angular.module('starter.controllers', [])
 
   .controller('paymentCtrl', function($scope, $rootScope, $state, $ionicPopup, $ionicLoading, Cart, Account, $ionicModal, Connection) {
 
+    $scope.noInternet = false;
+    var cart;
     $scope.pin = "";
-    var cart = Cart.get();
 
     function popupPaymentSuccess() {
       $ionicPopup.alert({
         title: 'Order Submitted',
-        subTitle: '<p class="dark">Your order has been submitted successfully.</p>',
+        subTitle: 'Your order has been submitted successfully.',
         okType: 'button-royal'
       }).then(function(res) {
         console.log("Order type: " + $rootScope.ordType);
@@ -2297,12 +2477,12 @@ angular.module('starter.controllers', [])
 
     function popupPaymentFail() {
       $ionicPopup.alert({
-        title: 'Order not Submitted',
+        title: 'Order Not Submitted',
         subTitle: 'Not enough stock, please re-select your food items',
         okType: 'button-royal'
       }).then(function(res) {
         $state.go('app.food');
-        console.log("Not enough stock");
+        console.log("Order Not Submitted");
       });
     }
 
@@ -2330,17 +2510,28 @@ angular.module('starter.controllers', [])
     }
 
     function getData() {
-      Account.get(localStorage.getItem("accountId")).then(function(res) {
-        $scope.paymentForm = {
-          reference: 'CC843154841254',
-          name: res.custFullName,
-          identifier: 'CC6541564531641321',
-          amount: '$' + cart.total
-        };
-      });
+      var haveInternet = Connection.checkInternet();
+      if (haveInternet) {
+        $scope.noInternet = false;
+        cart = Cart.get()
+        Account.get(localStorage.getItem("accountId")).then(function(res) {
+          $scope.paymentForm = {
+            reference: 'CC843154841254',
+            name: res.custFullName,
+            identifier: 'CC6541564531641321',
+            amount: '$' + cart.total
+          };
+        });
+      } else {
+        $scope.noInternet = true;
+      }
     }
 
     getData();
+
+    $scope.reconnect = function() {
+      getData();
+    };
 
     $ionicModal.fromTemplateUrl('templates/pin.html', {
       scope: $scope,
@@ -2371,7 +2562,7 @@ angular.module('starter.controllers', [])
     });
 
     $scope.pay = function() {
-      var haveInternet = Connection.checkInterentWithPopup();
+      var haveInternet = Connection.checkInternetWithPopup();
       if (haveInternet) {
         load();
       }
