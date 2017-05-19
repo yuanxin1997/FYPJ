@@ -7,7 +7,7 @@
       <ion-list>
 
         <div class="item item-thumbnail-left item-text-wrap" ng-repeat="item in items track by (itemID + $index)" ng-init="init(item.itemID,$index)">
-          <img ng-src="http://172.20.129.181/LCafe_Menu_Images/{{ item.itemImg }}" alt="" />
+          <img ng-src="http://acerobot.sit.nyp.edu.sg/LCafe_Menu_Images/{{ item.itemImg }}" alt="" />
           <span class="fFont2">{{ item.itemName }}</span>
           <p class="fFont0">${{ item.itemPrice | number : 2}}</p>
           <a ui-sref="item({id: item.itemID, itemName: item.itemName})" class="favButton"></a>

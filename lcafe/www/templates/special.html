@@ -13,7 +13,7 @@
         <div class="item item-menu" ng-repeat="item in specialMenu | filter:searchText | filter:customFilter | orderBy:sort.value track by (itemID + $index)" ui-sref="app.specialItem({id: item.itemID, itemName: item.itemName})">
 
           <div ng-class="checkLabel(item.label)"><span>{{ item.label }}</span></div>
-          <img ng-src="http://172.20.129.181/LCafe_Menu_Images/{{ item.itemImg }}" err-src="http://placehold.it/350x250" alt="{{ item.name }}" />
+          <img ng-src="http://acerobot.sit.nyp.edu.sg/LCafe_Menu_Images/{{ item.itemImg }}" err-src="http://placehold.it/350x250" alt="{{ item.name }}" />
 
           <div class="overlay"> <span class="pull-left royal">
           <b>{{ item.itemName }}</b>

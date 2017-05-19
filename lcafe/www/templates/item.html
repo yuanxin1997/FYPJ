@@ -5,7 +5,7 @@
     <ion-content class="light-bg">
       <!-- Item cover -->
       <div class="item-cover">
-        <img class="full-image" ng-src="http://172.20.129.181/LCafe_Menu_Images/{{ item.itemImg }}" err-src="http://placehold.it/250x250" alt="" />
+        <img class="full-image" ng-src="http://acerobot.sit.nyp.edu.sg/LCafe_Menu_Images/{{ item.itemImg }}" err-src="http://placehold.it/250x250" alt="" />
         <div class="fav">
           <a ng-if="!isFavourite && menuState=='login'" class="ion-android-favorite-outline" ng-click="setFavTrue(item.itemID)"></a>
           <a ng-if="isFavourite && menuState=='login'" class="ion-android-favorite" ng-click="setFavFalse(item.itemID)"></a>
