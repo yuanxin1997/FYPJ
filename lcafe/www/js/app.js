@@ -1,4 +1,4 @@
-var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.services', 'ngCordova', 'ion-datetime-picker', 'ion-floating-menu', 'angular-md5', 'ionic.rating', 'jett.ionic.content.banner', 'angularMoment', 'ja.qr', 'star-rating'])
+var app = angular.module('lcafe', ['ionic', 'starter.controllers', 'starter.services', 'ngCordova', 'ion-datetime-picker', 'ion-floating-menu', 'angular-md5', 'jett.ionic.content.banner', 'angularMoment', 'ja.qr', 'star-rating'])
   .config(function($stateProvider, $urlRouterProvider) {
     $stateProvider.state('app', {
       url: '/app',

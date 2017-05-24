@@ -583,7 +583,7 @@ app.factory('Cart', function($http, moment, APIurl, $q, Promotions, Connection) 
       }
     }
 
-    if (combo3) { // within time
+    if (combo3) {
       var discountItems = [];
       var combo3Arr = [];
       var combo3Objects = {};

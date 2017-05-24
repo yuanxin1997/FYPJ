@@ -29,7 +29,7 @@ angular.module('starter.controllers', [])
 
     function popupSuccessSignUp() {
       $ionicPopup.alert({
-        title: 'Sign Up Sucesssful',
+        title: 'Sign Up Successsful',
         subTitle: 'Please verify your email before logging in.',
         okType: 'button-royal'
       }).then(function(res) {
@@ -48,20 +48,20 @@ angular.module('starter.controllers', [])
       });
     }
 
-    function popupSucessRequest() {
+    function popupSuccessRequest() {
       $ionicPopup.alert({
-        title: 'Request Sucessful',
+        title: 'Request Successful',
         subTitle: 'The link will be sent to you in a short while.',
         okType: 'button-royal'
       }).then(function(res) {
         $ionicHistory.goBack();
-        console.log('Request Sucessful');
+        console.log('Request Successful');
       });
     }
 
     function popupSuccessReset() {
       $ionicPopup.alert({
-        title: 'Password Reset Sucesssful',
+        title: 'Password Reset Successsful',
         subTitle: 'Your password has been reset.',
         okType: 'button-royal'
       }).then(function(res) {
@@ -165,7 +165,7 @@ angular.module('starter.controllers', [])
                 form.$setPristine();
                 form.$setUntouched();
               }
-              popupSucessRequest();
+              popupSuccessRequest();
             });
           } else {
             popupEmailNotFound();
@@ -1137,7 +1137,7 @@ angular.module('starter.controllers', [])
       if ($scope.cart.items.length > 0) {
         $timeout(function() {
           showBanner('info', 'vertical');
-        }, 250);
+        }, 600);
       }
     }
 
@@ -1213,9 +1213,9 @@ angular.module('starter.controllers', [])
 
     $scope.openModal = function(msg) {
       var haveInternet = Connection.checkInternetWithPopup();
+      $scope.list = [];
       if (haveInternet) {
         Promotions.getAll().then(function(res) {
-          $scope.list = [];
           for (var i = 0; i < res.length; i++) {
             console.log(res[i]);
             if (res[i].status == 1 && res[i].comboType == "combo1" && msg == "combo1") {
@@ -1349,7 +1349,7 @@ angular.module('starter.controllers', [])
 
   })
 
-  .controller('favouriteCtrl', function($scope, $state, $ionicPopup, Favourite, $rootScope, $ionicContentBanner, Connection, $timeout) {
+  .controller('favouriteCtrl', function($scope, $state, $ionicPopup, Favourite, $rootScope, $ionicContentBanner, Connection, $timeout, $q) {
 
     $scope.noInternet = false;
     var contentBannerInstance;
@@ -1370,7 +1370,18 @@ angular.module('starter.controllers', [])
       });
     }
 
+    function checkForEmpty() {
+      var a = localStorage.getItem("favouriteItemsID");
+      var b = localStorage.getItem("favIndex");
+      if (a == '' && b == '') {
+        $timeout(function() {
+          showBanner('info', 'vertical');
+        }, 600);
+      }
+    }
+
     function refresh() {
+      var deferred = $q.defer();
       if ($rootScope.menuState == 'login') {
         $scope.dataSend.custID = localStorage.getItem("accountId");
         $scope.dataSend.favouriteItemsID = localStorage.getItem("favouriteItemsID");
@@ -1388,8 +1399,10 @@ angular.module('starter.controllers', [])
             }
           }
           localStorage.setItem("favIndex", '');
+          deferred.resolve('done');
         });
       }
+      return deferred.promise;
     }
 
     function getData() {
@@ -1397,14 +1410,12 @@ angular.module('starter.controllers', [])
         console.log(res);
         if (res != "noInternet") {
           $scope.noInternet = false;
-          if (res != 'Empty') {
+          if (res == 'Empty' || res.length == 0) {
+            checkForEmpty();
+          } else {
             for (var i = 0; i < res.length; i++) {
               $scope.items.push(res[i]);
             }
-          } else {
-            $timeout(function() {
-              showBanner('info', 'vertical');
-            }, 250);
           }
         } else {
           $scope.noInternet = true;
@@ -1436,6 +1447,7 @@ angular.module('starter.controllers', [])
       if (isFound == false) {
         $scope.items.splice(index, 1);
       }
+      checkForEmpty();
     };
 
     $scope.checkFav = function(id) {
@@ -1495,7 +1507,9 @@ angular.module('starter.controllers', [])
     $scope.doRefresh = function() {
       var haveInternet = Connection.checkInternetWithPopup();
       if (haveInternet) {
-        refresh();
+        refresh().then(function(res) {
+          checkForEmpty();
+        });
       }
       $scope.$broadcast('scroll.refreshComplete');
     };
@@ -1652,7 +1666,7 @@ angular.module('starter.controllers', [])
 
     function popupSuccessReset() {
       $ionicPopup.alert({
-        title: 'Password Change Sucesssful',
+        title: 'Password Change Successsful',
         subTitle: 'You may now try to login with new password.',
         okType: 'button-royal'
       }).then(function(res) {
@@ -2039,7 +2053,7 @@ angular.module('starter.controllers', [])
       });
     }
 
-    function popupScanSucess(value) {
+    function popupScanSuccess(value) {
       $ionicPopup.alert({
         title: 'Scan Successful',
         template: 'Your table number is : ' + value,
@@ -2117,7 +2131,7 @@ angular.module('starter.controllers', [])
               .scan()
               .then(function(barcodeData) {
                 Cart.setDineIn(barcodeData.text);
-                popupScanSucess(barcodeData.text);
+                popupScanSuccess(barcodeData.text);
               }, function(error) {
                 console.log(error);
               });
@@ -2157,7 +2171,7 @@ angular.module('starter.controllers', [])
             }).then(function(res) {
               if (res != undefined) {
                 Cart.setDineIn(res);
-                popupScanSucess(res);
+                popupScanSuccess(res);
               }
             });
           } else if (res == "WithinFifteenMinutesBeforeClose") {
