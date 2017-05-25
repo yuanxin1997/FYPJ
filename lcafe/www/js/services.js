@@ -1,5 +1,5 @@
 angular.module('starter.services', [])
-  .constant('APIurl', 'http://acerobot.sit.nyp.edu.sg/WebServiceLCafe2/')
+  .constant('APIurl', 'http://acerobot.sit.nyp.edu.sg/WebServiceLCafe1/')
   .constant('Emailurl', 'http://acerobot.sit.nyp.edu.sg/LCafeEmailServices/')
   .constant('Accesskey', 'W7djP08dGhXqld1g3RXpz')
   .directive('errSrc', function() {
